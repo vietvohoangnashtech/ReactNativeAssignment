@@ -7,11 +7,11 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import {useOrders} from '../hooks/useOrders';
 import {ScreenHeader} from '../../../components/ui/ScreenHeader/ScreenHeader';
+import {colors} from '../../../theme';
 import type {Order} from '../types/order.types';
 
 type FilterTab = 'All' | 'Ongoing' | 'Completed' | 'Cancelled';
@@ -19,12 +19,12 @@ type FilterTab = 'All' | 'Ongoing' | 'Completed' | 'Cancelled';
 const TABS: FilterTab[] = ['All', 'Ongoing', 'Completed', 'Cancelled'];
 const ONGOING_STATUSES = ['pending', 'processing', 'shipped'];
 
-const STATUS_CONFIG: Record<string, {bg: string; color: string}> = {
-  delivered: {bg: '#DCFCE7', color: '#15803D'},
-  shipped: {bg: '#E0F2FE', color: '#0369A1'},
-  processing: {bg: '#E0F2FE', color: '#0369A1'},
-  pending: {bg: '#FEF9C3', color: '#92400E'},
-  cancelled: {bg: '#FEE2E2', color: '#DC2626'},
+const STATUS_CONFIG: Record<string, {bg: string; color: string; icon: string}> = {
+  delivered: {bg: colors.statusDeliveredBg, color: colors.statusDelivered, icon: 'check-circle'},
+  shipped: {bg: colors.statusShippedBg, color: colors.statusShipped, icon: 'truck'},
+  processing: {bg: colors.statusShippedBg, color: colors.statusShipped, icon: 'loader'},
+  pending: {bg: colors.statusPendingBg, color: colors.statusPending, icon: 'clock'},
+  cancelled: {bg: colors.statusCancelledBg, color: colors.statusCancelled, icon: 'x-circle'},
 };
 
 const formatDate = (dateStr: string) => {
@@ -59,15 +59,20 @@ const OrderHistoryScreen = (): React.JSX.Element => {
   });
 
   const renderOrder = useCallback(({item}: {item: Order}) => {
-    const sc = STATUS_CONFIG[item.status] ?? {bg: '#E2E8F0', color: '#475569'};
+    const sc = STATUS_CONFIG[item.status] ?? {bg: colors.inputBg, color: colors.textBody, icon: 'package'};
     return (
       <View style={styles.card}>
         <View style={styles.cardTop}>
-          <View>
-            <Text style={styles.orderId}>
-              {'ORDER #ORD-' + String(item.id).padStart(5, '0')}
-            </Text>
-            <Text style={styles.orderDate}>{formatDate(item.createdAt)}</Text>
+          <View style={styles.cardTopLeft}>
+            <View style={[styles.orderIconWrap, {backgroundColor: sc.bg}]}>
+              <Feather name={sc.icon} size={18} color={sc.color} />
+            </View>
+            <View>
+              <Text style={styles.orderId}>
+                {'ORDER #ORD-' + String(item.id).padStart(5, '0')}
+              </Text>
+              <Text style={styles.orderDate}>{formatDate(item.createdAt)}</Text>
+            </View>
           </View>
           <View>
             <View style={[styles.statusBadge, {backgroundColor: sc.bg}]}>
@@ -81,9 +86,12 @@ const OrderHistoryScreen = (): React.JSX.Element => {
           </View>
         </View>
         {item.shippingAddress ? (
-          <Text style={styles.shippingAddress} numberOfLines={1}>
-            📦 {item.shippingAddress}
-          </Text>
+          <View style={styles.shippingRow}>
+            <Feather name="map-pin" size={12} color={colors.textMuted} />
+            <Text style={styles.shippingAddress} numberOfLines={1}>
+              {item.shippingAddress}
+            </Text>
+          </View>
         ) : null}
       </View>
     );
@@ -93,6 +101,7 @@ const OrderHistoryScreen = (): React.JSX.Element => {
     <View style={styles.container}>
       <ScreenHeader title="Order History" />
 
+      {/* Filter Tabs */}
       <View style={styles.tabBar}>
         {TABS.map(tab => (
           <TouchableOpacity
@@ -112,7 +121,7 @@ const OrderHistoryScreen = (): React.JSX.Element => {
 
       {loading && !refreshing ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#39B78D" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
         <View style={styles.center}>
@@ -132,12 +141,12 @@ const OrderHistoryScreen = (): React.JSX.Element => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#39B78D"
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyIcon}>📋</Text>
+              <Feather name="inbox" size={48} color={colors.textDisabled} />
               <Text style={styles.emptyText}>No orders found</Text>
             </View>
           }
@@ -147,37 +156,15 @@ const OrderHistoryScreen = (): React.JSX.Element => {
   );
 };
 
-type OrderHistoryStyles = {
-  container: ViewStyle;
-  tabBar: ViewStyle;
-  tab: ViewStyle;
-  tabActive: ViewStyle;
-  tabText: TextStyle;
-  tabTextActive: TextStyle;
-  center: ViewStyle;
-  errorText: TextStyle;
-  retryBtn: ViewStyle;
-  retryText: TextStyle;
-  emptyIcon: TextStyle;
-  emptyText: TextStyle;
-  list: ViewStyle;
-  card: ViewStyle;
-  cardTop: ViewStyle;
-  orderId: TextStyle;
-  orderDate: TextStyle;
-  statusBadge: ViewStyle;
-  statusText: TextStyle;
-  orderTotal: TextStyle;
-  shippingAddress: TextStyle;
-};
-
-const styles = StyleSheet.create<OrderHistoryStyles>({
-  container: {flex: 1, backgroundColor: '#F9FAFB'},
+const styles = StyleSheet.create({
+  container: {flex: 1, backgroundColor: colors.background},
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingTop: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   tab: {
     flex: 1,
@@ -186,29 +173,28 @@ const styles = StyleSheet.create<OrderHistoryStyles>({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#39B78D',
+    borderBottomColor: colors.primary,
   },
-  tabText: {fontSize: 12, color: '#9CA3AF', fontWeight: '500'},
-  tabTextActive: {color: '#39B78D', fontWeight: '700'},
+  tabText: {fontSize: 13, color: colors.textDisabled, fontWeight: '500'},
+  tabTextActive: {color: colors.primary, fontWeight: '700'},
   center: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20},
-  errorText: {color: '#e53935', fontSize: 14, textAlign: 'center'},
+  errorText: {color: colors.error, fontSize: 14, textAlign: 'center'},
   retryBtn: {
     marginTop: 12,
     paddingHorizontal: 20,
     paddingVertical: 8,
-    backgroundColor: '#39B78D',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
   },
-  retryText: {color: '#fff', fontWeight: '600'},
-  emptyIcon: {fontSize: 48, marginBottom: 8},
-  emptyText: {color: '#9CA3AF', fontSize: 15},
+  retryText: {color: colors.textHeading, fontWeight: '600'},
+  emptyText: {color: colors.textDisabled, fontSize: 15, marginTop: 8},
   list: {padding: 16},
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -219,8 +205,21 @@ const styles = StyleSheet.create<OrderHistoryStyles>({
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  orderId: {fontSize: 13, fontWeight: '700', color: '#1F2937'},
-  orderDate: {fontSize: 12, color: '#9CA3AF', marginTop: 2},
+  cardTopLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  orderIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orderId: {fontSize: 13, fontWeight: '700', color: colors.textHeading},
+  orderDate: {fontSize: 12, color: colors.textDisabled, marginTop: 2},
   statusBadge: {
     alignSelf: 'flex-end',
     paddingHorizontal: 10,
@@ -233,9 +232,17 @@ const styles = StyleSheet.create<OrderHistoryStyles>({
     textAlign: 'right',
     fontSize: 15,
     fontWeight: '700',
-    color: '#39B78D',
+    color: colors.primary,
   },
-  shippingAddress: {fontSize: 12, color: '#6B7280'},
+  shippingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  shippingAddress: {fontSize: 12, color: colors.textMuted, flex: 1},
 });
 
 export {OrderHistoryScreen};

@@ -8,16 +8,15 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ViewStyle,
-  TextStyle,
-  ImageStyle,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp, NativeStackScreenProps} from '@react-navigation/native-stack';
+import Feather from 'react-native-vector-icons/Feather';
 import {useAppDispatch, useAppSelector} from '../../../store/store';
 import {fetchProductById, fetchProductReviews, clearSelectedProduct} from '../store/productsSlice';
 import {addItem} from '../../cart/store/cartSlice';
 import {productService} from '../services/productService';
+import {colors} from '../../../theme';
 import type {RootStackParamList} from '../../../navigation/types';
 import type {CreateReviewPayload} from '../types/product.types';
 
@@ -99,7 +98,7 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
   if (!product) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#39B78D" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -112,27 +111,32 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <Text style={styles.backText}>← Back</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
+          <Feather name="chevron-left" size={24} color={colors.textHeading} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           Product Details
         </Text>
-        <View style={styles.headerBtn} />
+        <TouchableOpacity style={styles.headerIconBtn}>
+          <Feather name="heart" size={20} color={colors.textMuted} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Product Image */}
         <View style={styles.imageSection}>
           {product.image ? (
             <Image source={{uri: product.image}} style={styles.productImage} />
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Text style={styles.imagePlaceholderText}>🖼</Text>
+              <Feather name="image" size={64} color={colors.textDisabled} />
             </View>
           )}
         </View>
 
+        {/* Info */}
         <View style={styles.infoSection}>
           <Text style={styles.productName}>{product.name}</Text>
           <View style={styles.priceRatingRow}>
@@ -141,34 +145,73 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
               {Number(product.price).toFixed(2)}
             </Text>
             {reviews.length > 0 && (
-              <Text style={styles.rating}>
-                ★ {avgRating.toFixed(1)} ({reviews.length})
-              </Text>
+              <View style={styles.ratingBadge}>
+                <Feather name="star" size={14} color="#F59E0B" />
+                <Text style={styles.ratingText}>
+                  {avgRating.toFixed(1)} ({reviews.length})
+                </Text>
+              </View>
             )}
           </View>
         </View>
 
+        {/* Features */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Features</Text>
+          <View style={styles.featureGrid}>
+            {[
+              {icon: 'shield', label: 'Quality Assured'},
+              {icon: 'truck', label: 'Free Shipping'},
+              {icon: 'refresh-cw', label: 'Easy Returns'},
+              {icon: 'award', label: 'Top Rated'},
+            ].map(f => (
+              <View key={f.icon} style={styles.featureItem}>
+                <View style={styles.featureIcon}>
+                  <Feather name={f.icon} size={16} color={colors.primary} />
+                </View>
+                <Text style={styles.featureLabel}>{f.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Description */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.description}>{product.description}</Text>
         </View>
 
+        {/* Reviews */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             Reviews ({reviews.length})
           </Text>
           {reviewsLoading ? (
-            <ActivityIndicator color="#39B78D" />
+            <ActivityIndicator color={colors.primary} />
           ) : reviews.length === 0 ? (
             <Text style={styles.emptyReviews}>No reviews yet. Be the first!</Text>
           ) : (
             reviews.map(r => (
               <View key={r.id} style={styles.reviewItem}>
                 <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewAuthor}>
-                    {r.User?.username ?? 'User'}
-                  </Text>
-                  <Text style={styles.reviewRating}>{'★'.repeat(r.rating)}</Text>
+                  <View style={styles.reviewAvatarWrap}>
+                    <View style={styles.reviewAvatar}>
+                      <Feather name="user" size={14} color={colors.primary} />
+                    </View>
+                    <Text style={styles.reviewAuthor}>
+                      {r.User?.username ?? 'User'}
+                    </Text>
+                  </View>
+                  <View style={styles.reviewStarsRow}>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Feather
+                        key={s}
+                        name="star"
+                        size={12}
+                        color={s <= r.rating ? '#F59E0B' : colors.borderLight}
+                      />
+                    ))}
+                  </View>
                 </View>
                 <Text style={styles.reviewMessage}>{r.message}</Text>
               </View>
@@ -176,21 +219,24 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
           )}
         </View>
 
+        {/* Write Review */}
         <View style={[styles.section, styles.writeReview]}>
           <Text style={styles.sectionTitle}>Write a Review</Text>
-          <View style={styles.ratingRow}>
+          <View style={styles.starRow}>
             {[1, 2, 3, 4, 5].map(s => (
               <TouchableOpacity key={s} onPress={() => setReviewRating(s)}>
-                <Text style={[styles.star, s <= reviewRating && styles.starActive]}>
-                  ★
-                </Text>
+                <Feather
+                  name="star"
+                  size={28}
+                  color={s <= reviewRating ? '#F59E0B' : colors.inputBorder}
+                />
               </TouchableOpacity>
             ))}
           </View>
           <TextInput
             style={styles.reviewInput}
             placeholder="Share your thoughts..."
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textDisabled}
             value={reviewText}
             onChangeText={setReviewText}
             multiline
@@ -207,8 +253,10 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
         </View>
       </ScrollView>
 
+      {/* Bottom Action Bar */}
       <View style={styles.actionBar}>
         <TouchableOpacity style={styles.addCartBtn} onPress={handleAddToCart}>
+          <Feather name="shopping-cart" size={18} color={colors.primary} />
           <Text style={styles.addCartText}>{added ? 'Added!' : 'Add to Cart'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.buyNowBtn} onPress={handleBuyNow}>
@@ -219,48 +267,8 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
   );
 };
 
-type ProductDetailStyles = {
-  container: ViewStyle;
-  center: ViewStyle;
-  header: ViewStyle;
-  headerBtn: ViewStyle;
-  backText: TextStyle;
-  headerTitle: TextStyle;
-  imageSection: ViewStyle;
-  productImage: ImageStyle;
-  imagePlaceholder: ViewStyle;
-  imagePlaceholderText: TextStyle;
-  infoSection: ViewStyle;
-  productName: TextStyle;
-  priceRatingRow: ViewStyle;
-  price: TextStyle;
-  rating: TextStyle;
-  section: ViewStyle;
-  writeReview: ViewStyle;
-  sectionTitle: TextStyle;
-  description: TextStyle;
-  emptyReviews: TextStyle;
-  reviewItem: ViewStyle;
-  reviewHeader: ViewStyle;
-  reviewAuthor: TextStyle;
-  reviewRating: TextStyle;
-  reviewMessage: TextStyle;
-  ratingRow: ViewStyle;
-  star: TextStyle;
-  starActive: TextStyle;
-  reviewInput: ViewStyle & TextStyle;
-  submitBtn: ViewStyle;
-  submitBtnDisabled: ViewStyle;
-  submitBtnText: TextStyle;
-  actionBar: ViewStyle;
-  addCartBtn: ViewStyle;
-  addCartText: TextStyle;
-  buyNowBtn: ViewStyle;
-  buyNowText: TextStyle;
-};
-
-const styles = StyleSheet.create<ProductDetailStyles>({
-  container: {flex: 1, backgroundColor: '#fff'},
+const styles = StyleSheet.create({
+  container: {flex: 1, backgroundColor: colors.surface},
   center: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   header: {
     flexDirection: 'row',
@@ -268,89 +276,142 @@ const styles = StyleSheet.create<ProductDetailStyles>({
     height: 56,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  headerBtn: {minWidth: 60},
-  backText: {color: '#39B78D', fontSize: 15},
-  headerTitle: {flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '600', color: '#1F2937'},
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.textHeading,
+  },
   imageSection: {
     height: 280,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.inputBg,
   },
   productImage: {width: '100%', height: '100%', resizeMode: 'cover'},
   imagePlaceholder: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  imagePlaceholderText: {fontSize: 64},
-  infoSection: {padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6'},
-  productName: {fontSize: 20, fontWeight: '700', color: '#1F2937', marginBottom: 8},
-  priceRatingRow: {flexDirection: 'row', alignItems: 'center', gap: 12},
-  price: {fontSize: 22, fontWeight: '700', color: '#39B78D'},
-  rating: {fontSize: 14, color: '#F59E0B', fontWeight: '600'},
-  section: {padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6'},
+  infoSection: {padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border},
+  productName: {fontSize: 20, fontWeight: '700', color: colors.textHeading, marginBottom: 8},
+  priceRatingRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
+  price: {fontSize: 22, fontWeight: '700', color: colors.primary},
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  ratingText: {fontSize: 13, fontWeight: '600', color: '#F59E0B'},
+  section: {padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border},
   writeReview: {borderBottomWidth: 0, paddingBottom: 24},
-  sectionTitle: {fontSize: 16, fontWeight: '700', color: '#1F2937', marginBottom: 10},
-  description: {fontSize: 14, color: '#4B5563', lineHeight: 22},
-  emptyReviews: {color: '#9CA3AF', fontSize: 14},
+  sectionTitle: {fontSize: 16, fontWeight: '700', color: colors.textHeading, marginBottom: 10},
+  description: {fontSize: 14, color: colors.textBody, lineHeight: 22},
+  featureGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  featureItem: {
+    width: '47%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primaryLight,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  featureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureLabel: {fontSize: 12, fontWeight: '500', color: colors.textLabel, flex: 1},
+  emptyReviews: {color: colors.textDisabled, fontSize: 14},
   reviewItem: {
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: colors.border,
   },
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    alignItems: 'center',
+    marginBottom: 6,
   },
-  reviewAuthor: {fontWeight: '600', color: '#1F2937', fontSize: 13},
-  reviewRating: {color: '#F59E0B', fontSize: 13},
-  reviewMessage: {fontSize: 13, color: '#4B5563', lineHeight: 18},
-  ratingRow: {flexDirection: 'row', gap: 6, marginBottom: 10},
-  star: {fontSize: 28, color: '#D1D5DB'},
-  starActive: {color: '#F59E0B'},
+  reviewAvatarWrap: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  reviewAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewAuthor: {fontWeight: '600', color: colors.textHeading, fontSize: 13},
+  reviewStarsRow: {flexDirection: 'row', gap: 2},
+  reviewMessage: {fontSize: 13, color: colors.textBody, lineHeight: 18, marginLeft: 36},
+  starRow: {flexDirection: 'row', gap: 6, marginBottom: 10},
   reviewInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
+    borderColor: colors.inputBorder,
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
-    color: '#333',
+    color: colors.textBody,
     minHeight: 80,
     textAlignVertical: 'top',
     marginBottom: 10,
   },
   submitBtn: {
-    backgroundColor: '#39B78D',
-    paddingVertical: 10,
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
   },
   submitBtnDisabled: {opacity: 0.5},
-  submitBtnText: {color: '#fff', fontWeight: '600', fontSize: 14},
+  submitBtnText: {color: colors.textHeading, fontWeight: '600', fontSize: 14},
   actionBar: {
     flexDirection: 'row',
     padding: 12,
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.border,
   },
   addCartBtn: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     borderWidth: 2,
-    borderColor: '#39B78D',
+    borderColor: colors.primary,
   },
-  addCartText: {color: '#39B78D', fontWeight: '700', fontSize: 15},
+  addCartText: {color: colors.primary, fontWeight: '700', fontSize: 15},
   buyNowBtn: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: '#39B78D',
+    backgroundColor: colors.primary,
   },
-  buyNowText: {color: '#fff', fontWeight: '700', fontSize: 15},
+  buyNowText: {color: colors.textHeading, fontWeight: '700', fontSize: 15},
 });
 
 export {ProductDetailScreen};

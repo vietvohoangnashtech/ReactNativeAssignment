@@ -6,12 +6,10 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ViewStyle,
-  TextStyle,
-  ImageStyle,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import Feather from 'react-native-vector-icons/Feather';
 import {useAppDispatch, useAppSelector} from '../../../store/store';
 import {
   removeItem,
@@ -21,6 +19,7 @@ import {
   selectCartTotal,
 } from '../store/cartSlice';
 import {ScreenHeader} from '../../../components/ui/ScreenHeader/ScreenHeader';
+import {colors} from '../../../theme';
 import type {CartItem} from '../types/cart.types';
 import type {RootStackParamList} from '../../../navigation/types';
 
@@ -42,7 +41,7 @@ const CartScreen = (): React.JSX.Element => {
             <Image source={{uri: item.image}} style={styles.productImage} />
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Text style={styles.imagePlaceholderText}>🖼</Text>
+              <Feather name="image" size={28} color={colors.textDisabled} />
             </View>
           )}
         </View>
@@ -59,7 +58,11 @@ const CartScreen = (): React.JSX.Element => {
                   ? dispatch(updateQuantity({id: item.id, quantity: item.quantity - 1}))
                   : dispatch(removeItem(item.id))
               }>
-              <Text style={styles.qtyBtnText}>{item.quantity > 1 ? '−' : '🗑'}</Text>
+              <Feather
+                name={item.quantity > 1 ? 'minus' : 'trash-2'}
+                size={14}
+                color={item.quantity > 1 ? colors.textLabel : colors.error}
+              />
             </TouchableOpacity>
             <Text style={styles.qtyText}>{item.quantity}</Text>
             <TouchableOpacity
@@ -67,14 +70,14 @@ const CartScreen = (): React.JSX.Element => {
               onPress={() =>
                 dispatch(updateQuantity({id: item.id, quantity: item.quantity + 1}))
               }>
-              <Text style={styles.qtyBtnText}>+</Text>
+              <Feather name="plus" size={14} color={colors.textLabel} />
             </TouchableOpacity>
           </View>
         </View>
         <TouchableOpacity
           style={styles.removeBtn}
           onPress={() => dispatch(removeItem(item.id))}>
-          <Text style={styles.removeBtnText}>✕</Text>
+          <Feather name="x" size={16} color={colors.textDisabled} />
         </TouchableOpacity>
       </View>
     ),
@@ -96,7 +99,9 @@ const CartScreen = (): React.JSX.Element => {
 
       {items.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🛒</Text>
+          <View style={styles.emptyIconWrap}>
+            <Feather name="shopping-cart" size={40} color={colors.textDisabled} />
+          </View>
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
           <Text style={styles.emptySubtitle}>Add items to get started</Text>
         </View>
@@ -126,7 +131,8 @@ const CartScreen = (): React.JSX.Element => {
             <TouchableOpacity
               style={styles.checkoutBtn}
               onPress={() => navigation.navigate('Checkout')}>
-              <Text style={styles.checkoutText}>Proceed to Checkout →</Text>
+              <Text style={styles.checkoutText}>Proceed to Checkout</Text>
+              <Feather name="arrow-right" size={18} color={colors.textHeading} />
             </TouchableOpacity>
           </View>
         </>
@@ -135,49 +141,15 @@ const CartScreen = (): React.JSX.Element => {
   );
 };
 
-type CartStyles = {
-  container: ViewStyle;
-  list: ViewStyle;
-  card: ViewStyle;
-  imageBox: ViewStyle;
-  productImage: ImageStyle;
-  imagePlaceholder: ViewStyle;
-  imagePlaceholderText: TextStyle;
-  info: ViewStyle;
-  name: TextStyle;
-  price: TextStyle;
-  qtyRow: ViewStyle;
-  qtyBtn: ViewStyle;
-  qtyBtnText: TextStyle;
-  qtyText: TextStyle;
-  removeBtn: ViewStyle;
-  removeBtnText: TextStyle;
-  clearText: TextStyle;
-  empty: ViewStyle;
-  emptyIcon: TextStyle;
-  emptyTitle: TextStyle;
-  emptySubtitle: TextStyle;
-  summary: ViewStyle;
-  summaryRow: ViewStyle;
-  summaryLabel: TextStyle;
-  summaryValue: TextStyle;
-  freeShipping: TextStyle;
-  divider: ViewStyle;
-  totalLabel: TextStyle;
-  totalValue: TextStyle;
-  checkoutBtn: ViewStyle;
-  checkoutText: TextStyle;
-};
-
-const styles = StyleSheet.create<CartStyles>({
-  container: {flex: 1, backgroundColor: '#F9FAFB'},
+const styles = StyleSheet.create({
+  container: {flex: 1, backgroundColor: colors.background},
   list: {padding: 16, gap: 12, paddingBottom: 8},
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -186,8 +158,8 @@ const styles = StyleSheet.create<CartStyles>({
   imageBox: {
     width: 80,
     height: 80,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    borderRadius: 10,
+    backgroundColor: colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -195,49 +167,63 @@ const styles = StyleSheet.create<CartStyles>({
   },
   productImage: {width: '100%', height: '100%', resizeMode: 'cover'},
   imagePlaceholder: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  imagePlaceholderText: {fontSize: 28},
   info: {flex: 1, justifyContent: 'space-between'},
-  name: {fontSize: 14, fontWeight: '600', color: '#1F2937'},
-  price: {fontSize: 16, fontWeight: '700', color: '#39B78D'},
+  name: {fontSize: 14, fontWeight: '600', color: colors.textHeading},
+  price: {fontSize: 16, fontWeight: '700', color: colors.primary},
   qtyRow: {flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8},
   qtyBtn: {
     width: 28,
     height: 28,
-    borderRadius: 6,
-    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    backgroundColor: colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  qtyBtnText: {fontSize: 16, color: '#374151'},
-  qtyText: {fontSize: 15, fontWeight: '700', color: '#1F2937', minWidth: 20, textAlign: 'center'},
+  qtyText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.textHeading,
+    minWidth: 20,
+    textAlign: 'center',
+  },
   removeBtn: {position: 'absolute', top: 8, right: 8, padding: 4},
-  removeBtnText: {color: '#9CA3AF', fontSize: 16},
-  clearText: {color: '#e53935', fontSize: 14, fontWeight: '600'},
+  clearText: {color: colors.error, fontSize: 14, fontWeight: '600'},
   empty: {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8},
-  emptyIcon: {fontSize: 56},
-  emptyTitle: {fontSize: 20, fontWeight: '700', color: '#1F2937'},
-  emptySubtitle: {fontSize: 14, color: '#9CA3AF'},
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.inputBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptyTitle: {fontSize: 20, fontWeight: '700', color: colors.textHeading},
+  emptySubtitle: {fontSize: 14, color: colors.textDisabled},
   summary: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.border,
   },
   summaryRow: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6},
-  summaryLabel: {fontSize: 14, color: '#6B7280'},
-  summaryValue: {fontSize: 14, color: '#1F2937', fontWeight: '500'},
-  freeShipping: {color: '#10B981'},
-  divider: {height: 1, backgroundColor: '#F3F4F6', marginVertical: 10},
-  totalLabel: {fontSize: 16, fontWeight: '700', color: '#1F2937'},
-  totalValue: {fontSize: 18, fontWeight: '700', color: '#39B78D'},
+  summaryLabel: {fontSize: 14, color: colors.textMuted},
+  summaryValue: {fontSize: 14, color: colors.textHeading, fontWeight: '500'},
+  freeShipping: {color: colors.success},
+  divider: {height: 1, backgroundColor: colors.border, marginVertical: 10},
+  totalLabel: {fontSize: 16, fontWeight: '700', color: colors.textHeading},
+  totalValue: {fontSize: 18, fontWeight: '700', color: colors.primary},
   checkoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginTop: 14,
-    backgroundColor: '#39B78D',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
-    alignItems: 'center',
   },
-  checkoutText: {color: '#fff', fontWeight: '700', fontSize: 16},
+  checkoutText: {color: colors.textHeading, fontWeight: '700', fontSize: 16},
 });
 
 export {CartScreen};

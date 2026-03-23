@@ -9,15 +9,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ViewStyle,
-  TextStyle,
-  ImageStyle,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import Feather from 'react-native-vector-icons/Feather';
 import {useProducts} from '../hooks/useProducts';
 import {useAppDispatch} from '../../../store/store';
 import {addItem} from '../../cart/store/cartSlice';
+import {colors} from '../../../theme';
 import type {Product} from '../types/product.types';
 import type {RootStackParamList} from '../../../navigation/types';
 
@@ -27,6 +26,8 @@ const PRICE_SYMBOL: Record<string, string> = {
   inr: '₹',
 };
 
+const CATEGORIES = ['All', 'Electronics', 'Clothing', 'Food', 'Books'];
+
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ProductListScreen = (): React.JSX.Element => {
@@ -35,14 +36,24 @@ const ProductListScreen = (): React.JSX.Element => {
   const {products, loading, error, refetch} = useProducts();
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
 
   const filtered = useMemo(() => {
-    if (!search.trim()) {
-      return products;
+    let list = products;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(q));
     }
-    const q = search.toLowerCase();
-    return products.filter(p => p.name.toLowerCase().includes(q));
-  }, [products, search]);
+    if (category !== 'All') {
+      const q = category.toLowerCase();
+      list = list.filter(
+        p =>
+          p.name.toLowerCase().includes(q) ||
+          (p.description && p.description.toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [products, search, category]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -79,9 +90,12 @@ const ProductListScreen = (): React.JSX.Element => {
               <Image source={{uri: item.image}} style={styles.image} />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Text style={styles.imagePlaceholderText}>🖼</Text>
+                <Feather name="image" size={32} color={colors.textDisabled} />
               </View>
             )}
+            <TouchableOpacity style={styles.heartBtn} activeOpacity={0.7}>
+              <Feather name="heart" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.name} numberOfLines={2}>
@@ -95,7 +109,7 @@ const ProductListScreen = (): React.JSX.Element => {
               <TouchableOpacity
                 style={styles.addBtn}
                 onPress={() => handleAddToCart(item)}>
-                <Text style={styles.addBtnText}>+</Text>
+                <Feather name="plus" size={16} color={colors.white} />
               </TouchableOpacity>
             </View>
           </View>
@@ -107,23 +121,64 @@ const ProductListScreen = (): React.JSX.Element => {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.headerBar}>
         <Text style={styles.title}>Discover</Text>
+        <TouchableOpacity>
+          <Feather name="bell" size={22} color={colors.textHeading} />
+        </TouchableOpacity>
       </View>
 
+      {/* Search */}
       <View style={styles.searchWrap}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search products..."
-          placeholderTextColor="#999"
-          value={search}
-          onChangeText={setSearch}
+        <View style={styles.searchRow}>
+          <Feather
+            name="search"
+            size={18}
+            color={colors.textMuted}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search products..."
+            placeholderTextColor={colors.textDisabled}
+            value={search}
+            onChangeText={setSearch}
+          />
+        </View>
+      </View>
+
+      {/* Category Tabs */}
+      <View style={styles.categoryWrap}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={CATEGORIES}
+          keyExtractor={c => c}
+          contentContainerStyle={styles.categoryList}
+          renderItem={({item: cat}) => (
+            <TouchableOpacity
+              style={[
+                styles.categoryChip,
+                category === cat && styles.categoryChipActive,
+              ]}
+              onPress={() => setCategory(cat)}>
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  category === cat && styles.categoryChipTextActive,
+                ]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          )}
         />
       </View>
 
+      {/* Product Grid */}
       {loading && !refreshing ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#39B78D" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
         <View style={styles.center}>
@@ -145,11 +200,12 @@ const ProductListScreen = (): React.JSX.Element => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#39B78D"
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
             <View style={styles.center}>
+              <Feather name="inbox" size={40} color={colors.textDisabled} />
               <Text style={styles.emptyText}>No products found</Text>
             </View>
           }
@@ -159,105 +215,128 @@ const ProductListScreen = (): React.JSX.Element => {
   );
 };
 
-type ProductListStyles = {
-  container: ViewStyle;
-  headerBar: ViewStyle;
-  title: TextStyle;
-  searchWrap: ViewStyle;
-  searchInput: ViewStyle & TextStyle;
-  center: ViewStyle;
-  errorText: TextStyle;
-  retryBtn: ViewStyle;
-  retryText: TextStyle;
-  emptyText: TextStyle;
-  list: ViewStyle;
-  row: ViewStyle;
-  card: ViewStyle;
-  imageWrap: ViewStyle;
-  image: ImageStyle;
-  imagePlaceholder: ViewStyle;
-  imagePlaceholderText: TextStyle;
-  cardBody: ViewStyle;
-  name: TextStyle;
-  priceRow: ViewStyle;
-  price: TextStyle;
-  addBtn: ViewStyle;
-  addBtnText: TextStyle;
-};
-
-const styles = StyleSheet.create<ProductListStyles>({
-  container: {flex: 1, backgroundColor: '#F9FAFB'},
+const styles = StyleSheet.create({
+  container: {flex: 1, backgroundColor: colors.background},
   headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: colors.surface,
   },
-  title: {fontSize: 22, fontWeight: '700', color: '#1F2937'},
+  title: {fontSize: 22, fontWeight: '700', color: colors.textHeading},
   searchWrap: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
   },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.inputBg,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {marginRight: 8},
   searchInput: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    flex: 1,
+    paddingVertical: 10,
     fontSize: 14,
-    color: '#333',
+    color: colors.textBody,
+  },
+  categoryWrap: {
+    backgroundColor: colors.surface,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  categoryList: {paddingHorizontal: 16, gap: 8},
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.inputBg,
+  },
+  categoryChipActive: {
+    backgroundColor: colors.primary,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textMuted,
+  },
+  categoryChipTextActive: {
+    color: colors.textHeading,
+    fontWeight: '600',
   },
   center: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20},
-  errorText: {color: '#e53935', fontSize: 14, textAlign: 'center'},
+  errorText: {color: colors.error, fontSize: 14, textAlign: 'center'},
   retryBtn: {
     marginTop: 12,
     paddingHorizontal: 20,
     paddingVertical: 8,
-    backgroundColor: '#39B78D',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
   },
-  retryText: {color: '#fff', fontWeight: '600'},
-  emptyText: {color: '#9CA3AF', fontSize: 15},
+  retryText: {color: colors.textHeading, fontWeight: '600'},
+  emptyText: {color: colors.textDisabled, fontSize: 15, marginTop: 8},
   list: {padding: 12},
   row: {justifyContent: 'space-between'},
   card: {
     width: '48%',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     marginBottom: 14,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
   },
-  imageWrap: {width: '100%', height: 140, backgroundColor: '#F3F4F6'},
+  imageWrap: {
+    width: '100%',
+    height: 140,
+    backgroundColor: colors.inputBg,
+  },
   image: {width: '100%', height: '100%', resizeMode: 'cover'},
   imagePlaceholder: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imagePlaceholderText: {fontSize: 32},
+  heartBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.black,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   cardBody: {padding: 10},
-  name: {fontSize: 13, fontWeight: '600', color: '#1F2937', marginBottom: 6},
+  name: {fontSize: 13, fontWeight: '600', color: colors.textHeading, marginBottom: 6},
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  price: {fontSize: 14, fontWeight: '700', color: '#39B78D'},
+  price: {fontSize: 14, fontWeight: '700', color: colors.primary},
   addBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#39B78D',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addBtnText: {color: '#fff', fontSize: 18, lineHeight: 22},
 });
 
 export {ProductListScreen};

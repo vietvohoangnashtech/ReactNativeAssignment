@@ -6,6 +6,7 @@ import {AuthNavigator} from './AuthNavigator';
 import {TabNavigator} from './TabNavigator';
 import {ProductDetailScreen} from '../features/products/screens/ProductDetailScreen';
 import {CheckoutScreen} from '../features/cart/screens/CheckoutScreen';
+import {colors} from '../theme';
 import type {RootStackParamList} from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -16,7 +17,7 @@ const RootNavigator = (): React.JSX.Element => {
   if (loading) {
     return (
       <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-        <ActivityIndicator size="large" color="#39B78D" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

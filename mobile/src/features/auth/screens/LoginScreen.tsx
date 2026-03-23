@@ -1,6 +1,7 @@
 import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -8,13 +9,13 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import {TextInput} from '../../../components/ui/TextInput/TextInput';
 import {Button} from '../../../components/ui/Button/Button';
 import {useAuthContext} from '../../../contexts/AuthContext';
 import {authService} from '../services/authService';
+import {colors} from '../../../theme';
 
 type Tab = 'login' | 'signup';
 
@@ -82,19 +83,29 @@ const LoginScreen = (): React.JSX.Element => {
     }
   }, [activeTab, username, password, email, firstName, lastName, age, login]);
 
+  const handleComingSoon = useCallback((feature: string) => {
+    Alert.alert('Coming Soon', `${feature} will be available in a future update.`);
+  }, []);
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.heading}>Welcome</Text>
-          <Text style={styles.subtitle}>Sign in to continue shopping</Text>
-        </View>
-
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
+          {/* Header Icon */}
+          <View style={styles.iconCircle}>
+            <Feather name="shopping-bag" size={32} color={colors.primary} />
+          </View>
+
+          {/* Welcome Text */}
+          <Text style={styles.heading}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Please enter your details</Text>
+
+          {/* Tab Toggle */}
           <View style={styles.tabStrip}>
             <TouchableOpacity
               style={[styles.tab, activeTab === 'login' && styles.tabActive]}
@@ -114,10 +125,11 @@ const LoginScreen = (): React.JSX.Element => {
             </TouchableOpacity>
           </View>
 
+          {/* Form */}
           <View style={styles.form}>
             <TextInput
               label="Username"
-              placeholder="johndoe"
+              placeholder="johndoe123"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
@@ -165,13 +177,32 @@ const LoginScreen = (): React.JSX.Element => {
               secureTextEntry
             />
 
+            {/* Forgot Password */}
+            {activeTab === 'login' && (
+              <TouchableOpacity
+                style={styles.forgotRow}
+                onPress={() => handleComingSoon('Password recovery')}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Biometrics Checkbox — visual only */}
+            {activeTab === 'login' && (
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox} />
+                <Text style={styles.checkboxLabel}>
+                  Use biometrics for faster login
+                </Text>
+              </View>
+            )}
+
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             {loading ? (
               <ActivityIndicator
                 style={styles.loader}
                 size="large"
-                color="#39B78D"
+                color={colors.primary}
               />
             ) : (
               <Button
@@ -179,74 +210,216 @@ const LoginScreen = (): React.JSX.Element => {
                 onPress={handleSubmit}
               />
             )}
+
+            {/* Biometrics Button — TODO */}
+            {activeTab === 'login' && (
+              <Button
+                label="Sign in with Biometrics"
+                variant="outline"
+                icon={
+                  <Feather name="smartphone" size={20} color={colors.primary} />
+                }
+                onPress={() => handleComingSoon('Biometric sign in')}
+              />
+            )}
           </View>
+
+          {/* Social Auth Divider */}
+          {activeTab === 'login' && (
+            <View style={styles.socialSection}>
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <View style={styles.dividerTextWrap}>
+                  <Text style={styles.dividerText}>Or continue with</Text>
+                </View>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.socialRow}>
+                <TouchableOpacity
+                  style={styles.socialBtn}
+                  onPress={() => handleComingSoon('Google sign in')}>
+                  <Text style={styles.socialBtnText}>Google</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.socialBtn}
+                  onPress={() => handleComingSoon('Facebook sign in')}>
+                  <Text style={styles.socialBtnText}>Facebook</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Footer */}
+          <Text style={styles.footer}>
+            By continuing, you agree to our{' '}
+            <Text style={styles.footerLink}>Terms of Service</Text>
+            {'\n'}and{' '}
+            <Text style={styles.footerLink}>Privacy Policy</Text>.
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-type LoginStyles = {
-  root: ViewStyle;
-  scroll: ViewStyle;
-  header: ViewStyle;
-  heading: TextStyle;
-  subtitle: TextStyle;
-  card: ViewStyle;
-  tabStrip: ViewStyle;
-  tab: ViewStyle;
-  tabActive: ViewStyle;
-  tabText: TextStyle;
-  tabTextActive: TextStyle;
-  form: ViewStyle;
-  error: TextStyle;
-  loader: ViewStyle;
-};
-
-const styles = StyleSheet.create<LoginStyles>({
-  root: {flex: 1, backgroundColor: '#F0FAF6'},
+const styles = StyleSheet.create({
+  root: {flex: 1, backgroundColor: colors.background},
   scroll: {
     flexGrow: 1,
-    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 48,
+    paddingVertical: 32,
   },
-  header: {alignItems: 'center', marginBottom: 28},
-  heading: {fontSize: 28, fontWeight: '700', color: '#1F2937'},
-  subtitle: {fontSize: 15, color: '#6B7280', marginTop: 6},
   card: {
     width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingTop: 32,
+    paddingBottom: 24,
+    shadowColor: colors.black,
+    shadowOffset: {width: 0, height: 8},
     shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 20,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  tabStrip: {flexDirection: 'row'},
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.textHeading,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  tabStrip: {
+    flexDirection: 'row',
+    marginHorizontal: 24,
+    backgroundColor: colors.inputBg,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 8,
+  },
   tab: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
   },
   tabActive: {
-    borderBottomColor: '#39B78D',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
+    shadowColor: colors.black,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  tabText: {fontSize: 15, fontWeight: '600', color: '#9CA3AF'},
-  tabTextActive: {color: '#39B78D'},
-  form: {padding: 20},
+  tabText: {fontSize: 14, fontWeight: '500', color: colors.textMuted},
+  tabTextActive: {color: colors.textHeading, fontWeight: '600'},
+  form: {paddingHorizontal: 24, paddingTop: 8},
+  forgotRow: {
+    alignSelf: 'flex-end',
+    marginBottom: 4,
+    marginTop: -4,
+  },
+  forgotText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+    gap: 10,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.surface,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: colors.textBody,
+  },
   error: {
-    color: '#e53935',
+    color: colors.error,
     fontSize: 13,
     marginBottom: 8,
     textAlign: 'center',
   },
   loader: {marginVertical: 12},
+  socialSection: {
+    paddingHorizontal: 24,
+    marginTop: 8,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerTextWrap: {
+    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+  },
+  dividerText: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  socialBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.surface,
+  },
+  socialBtnText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textLabel,
+  },
+  footer: {
+    fontSize: 12,
+    color: colors.textDisabled,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: 16,
+    paddingHorizontal: 24,
+  },
+  footerLink: {
+    textDecorationLine: 'underline',
+  },
 });
 
 export {LoginScreen};

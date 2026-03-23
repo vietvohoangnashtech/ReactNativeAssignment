@@ -7,6 +7,8 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
+import {colors} from '../../../theme';
 
 interface ScreenHeaderProps {
   title: string;
@@ -22,7 +24,7 @@ const ScreenHeader = ({
   <View style={styles.container}>
     {onBack ? (
       <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-        <Text style={styles.backText}>{'← Back'}</Text>
+        <Feather name="chevron-left" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
     ) : (
       <View style={styles.spacer} />
@@ -34,47 +36,35 @@ const ScreenHeader = ({
   </View>
 );
 
-type ScreenHeaderStyles = {
-  container: ViewStyle;
-  backBtn: ViewStyle;
-  backText: TextStyle;
-  title: TextStyle;
-  right: ViewStyle;
-  spacer: ViewStyle;
-};
-
-const styles = StyleSheet.create<ScreenHeaderStyles>({
+const styles = StyleSheet.create({
   container: {
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
+    borderBottomColor: colors.border,
+  } as ViewStyle,
   backBtn: {
     padding: 8,
-    minWidth: 64,
-  },
-  backText: {
-    color: '#39B78D',
-    fontSize: 15,
-  },
+    minWidth: 40,
+    borderRadius: 9999,
+  } as ViewStyle,
   title: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#222',
-  },
+    color: colors.textPrimary,
+  } as TextStyle,
   right: {
-    minWidth: 64,
+    minWidth: 40,
     alignItems: 'flex-end',
-  },
+  } as ViewStyle,
   spacer: {
-    minWidth: 64,
-  },
+    minWidth: 40,
+  } as ViewStyle,
 });
 
 export {ScreenHeader};

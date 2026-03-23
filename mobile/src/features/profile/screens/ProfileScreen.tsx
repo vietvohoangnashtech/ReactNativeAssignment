@@ -7,14 +7,14 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import {useAuthContext} from '../../../contexts/AuthContext';
 import {authService} from '../../auth/services/authService';
 import {useProfile} from '../hooks/useProfile';
 import {TextInput} from '../../../components/ui/TextInput/TextInput';
 import {ScreenHeader} from '../../../components/ui/ScreenHeader/ScreenHeader';
+import {colors} from '../../../theme';
 
 const ProfileScreen = (): React.JSX.Element => {
   const {logout} = useAuthContext();
@@ -74,7 +74,7 @@ const ProfileScreen = (): React.JSX.Element => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#39B78D" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -90,13 +90,15 @@ const ProfileScreen = (): React.JSX.Element => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {isOffline || error ? (
           <View style={styles.offlineBanner}>
+            <Feather name="wifi-off" size={14} color="#92400E" />
             <Text style={styles.offlineText}>
-              {isOffline ? '📶 Showing cached profile (offline)' : error}
+              {isOffline ? 'Showing cached profile (offline)' : error}
             </Text>
           </View>
         ) : null}
 
-        <View style={styles.avatarSection}>
+        {/* Identity Card */}
+        <View style={styles.identityCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{displayName[0]?.toUpperCase() ?? 'U'}</Text>
           </View>
@@ -104,12 +106,26 @@ const ProfileScreen = (): React.JSX.Element => {
           {profile?.username ? (
             <Text style={styles.usernameHandle}>@{profile.username}</Text>
           ) : null}
+          {profile?.email ? (
+            <View style={styles.emailRow}>
+              <Feather name="mail" size={14} color={colors.textMuted} />
+              <Text style={styles.emailText}>{profile.email}</Text>
+            </View>
+          ) : null}
         </View>
 
+        {/* Account Details Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Account Details</Text>
-            <TouchableOpacity onPress={() => {setIsEdit(e => !e); setSaveError(null);}}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => {setIsEdit(e => !e); setSaveError(null);}}>
+              <Feather
+                name={isEdit ? 'x' : 'edit-2'}
+                size={14}
+                color={colors.primary}
+              />
               <Text style={styles.editLink}>{isEdit ? 'Cancel' : 'Edit'}</Text>
             </TouchableOpacity>
           </View>
@@ -146,7 +162,7 @@ const ProfileScreen = (): React.JSX.Element => {
                 <Text style={styles.saveError}>{saveError}</Text>
               ) : null}
               {saving ? (
-                <ActivityIndicator color="#39B78D" style={styles.savingIndicator} />
+                <ActivityIndicator color={colors.primary} style={styles.savingIndicator} />
               ) : (
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
                   <Text style={styles.saveBtnText}>Save Changes</Text>
@@ -171,7 +187,26 @@ const ProfileScreen = (): React.JSX.Element => {
           )}
         </View>
 
+        {/* Menu Items */}
+        <View style={styles.menuCard}>
+          {[
+            {icon: 'settings', label: 'Settings'},
+            {icon: 'help-circle', label: 'Help & Support'},
+            {icon: 'shield', label: 'Privacy Policy'},
+          ].map(item => (
+            <TouchableOpacity key={item.icon} style={styles.menuItem}>
+              <View style={styles.menuIconWrap}>
+                <Feather name={item.icon} size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.menuLabel}>{item.label}</Text>
+              <Feather name="chevron-right" size={18} color={colors.textDisabled} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Logout */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Feather name="log-out" size={18} color={colors.error} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -179,69 +214,57 @@ const ProfileScreen = (): React.JSX.Element => {
   );
 };
 
-type ProfileStyles = {
-  container: ViewStyle;
-  center: ViewStyle;
-  offlineBanner: ViewStyle;
-  offlineText: TextStyle;
-  avatarSection: ViewStyle;
-  avatar: ViewStyle;
-  avatarText: TextStyle;
-  displayName: TextStyle;
-  usernameHandle: TextStyle;
-  card: ViewStyle;
-  cardHeader: ViewStyle;
-  cardTitle: TextStyle;
-  editLink: TextStyle;
-  readonlyRow: ViewStyle;
-  fieldLabel: TextStyle;
-  readonlyValue: TextStyle;
-  saveError: TextStyle;
-  savingIndicator: ViewStyle;
-  saveBtn: ViewStyle;
-  saveBtnText: TextStyle;
-  logoutBtn: ViewStyle;
-  logoutText: TextStyle;
-};
-
-const styles = StyleSheet.create<ProfileStyles>({
-  container: {flex: 1, backgroundColor: '#F9FAFB'},
+const styles = StyleSheet.create({
+  container: {flex: 1, backgroundColor: colors.background},
   center: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   offlineBanner: {
-    backgroundColor: '#FEF9C3',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.warningLight,
     padding: 12,
     margin: 12,
-    borderRadius: 8,
+    borderRadius: 10,
   },
-  offlineText: {color: '#92400E', fontSize: 13, textAlign: 'center'},
-  avatarSection: {
+  offlineText: {color: '#92400E', fontSize: 13, flex: 1},
+  identityCard: {
     alignItems: 'center',
-    paddingVertical: 24,
-    backgroundColor: '#fff',
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    backgroundColor: colors.surface,
     marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#39B78D',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  avatarText: {color: '#fff', fontSize: 32, fontWeight: '700'},
-  displayName: {fontSize: 20, fontWeight: '700', color: '#1F2937'},
-  usernameHandle: {fontSize: 14, color: '#9CA3AF', marginTop: 2},
+  avatarText: {color: colors.textHeading, fontSize: 32, fontWeight: '700'},
+  displayName: {fontSize: 20, fontWeight: '700', color: colors.textHeading},
+  usernameHandle: {fontSize: 14, color: colors.textDisabled, marginTop: 2},
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  emailText: {fontSize: 13, color: colors.textMuted},
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     marginHorizontal: 12,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -249,40 +272,82 @@ const styles = StyleSheet.create<ProfileStyles>({
     alignItems: 'center',
     marginBottom: 14,
   },
-  cardTitle: {fontSize: 16, fontWeight: '700', color: '#1F2937'},
-  editLink: {color: '#39B78D', fontSize: 14, fontWeight: '600'},
+  cardTitle: {fontSize: 16, fontWeight: '700', color: colors.textHeading},
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  editLink: {color: colors.primary, fontSize: 14, fontWeight: '600'},
   readonlyRow: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.border,
   },
   fieldLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     letterSpacing: 0.5,
     marginBottom: 2,
   },
-  readonlyValue: {fontSize: 15, color: '#1F2937'},
-  saveError: {color: '#e53935', fontSize: 13, marginBottom: 8, textAlign: 'center'},
+  readonlyValue: {fontSize: 15, color: colors.textHeading},
+  saveError: {color: colors.error, fontSize: 13, marginBottom: 8, textAlign: 'center'},
   savingIndicator: {marginVertical: 12},
   saveBtn: {
-    backgroundColor: '#39B78D',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
   },
-  saveBtnText: {color: '#fff', fontWeight: '700', fontSize: 15},
+  saveBtnText: {color: colors.textHeading, fontWeight: '700', fontSize: 15},
+  menuCard: {
+    backgroundColor: colors.surface,
+    marginHorizontal: 12,
+    borderRadius: 12,
+    paddingVertical: 4,
+    marginBottom: 16,
+    shadowColor: colors.black,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  menuIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  menuLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.textHeading,
+  },
   logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginHorizontal: 12,
     marginBottom: 32,
     paddingVertical: 14,
     borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorLight,
   },
-  logoutText: {color: '#DC2626', fontWeight: '700', fontSize: 16},
+  logoutText: {color: colors.error, fontWeight: '700', fontSize: 16},
 });
 
 export {ProfileScreen};

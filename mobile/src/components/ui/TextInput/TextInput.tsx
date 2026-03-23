@@ -8,24 +8,37 @@ import {
   ViewStyle,
   TextInputProps,
 } from 'react-native';
+import {colors} from '../../../theme';
 
 interface AppTextInputProps extends TextInputProps {
   label?: string;
   errorText?: string;
   description?: string;
+  inputStyle?: TextStyle;
+  containerStyle?: ViewStyle;
+  readOnly?: boolean;
 }
 
 const TextInput = ({
   label,
   errorText,
   description,
+  inputStyle,
+  containerStyle,
+  readOnly,
   ...props
 }: AppTextInputProps): React.JSX.Element => (
-  <View style={styles.container}>
+  <View style={[styles.container, containerStyle]}>
     {label ? <Text style={styles.label}>{label}</Text> : null}
     <RNTextInput
-      style={styles.input}
-      placeholderTextColor="#999"
+      style={[
+        styles.input,
+        readOnly && styles.inputReadOnly,
+        errorText ? styles.inputError : null,
+        inputStyle,
+      ]}
+      placeholderTextColor={colors.textMuted}
+      editable={!readOnly}
       {...props}
     />
     {description && !errorText ? (
@@ -35,45 +48,45 @@ const TextInput = ({
   </View>
 );
 
-type TextInputStyles = {
-  container: ViewStyle;
-  label: TextStyle;
-  input: TextStyle;
-  description: TextStyle;
-  error: TextStyle;
-};
-
-const styles = StyleSheet.create<TextInputStyles>({
+const styles = StyleSheet.create({
   container: {
     width: '100%',
     marginVertical: 8,
-  },
+  } as ViewStyle,
   label: {
-    fontSize: 13,
-    color: '#333',
-    marginBottom: 4,
-    fontWeight: '600',
-  },
+    fontSize: 14,
+    color: colors.textLabel,
+    marginBottom: 6,
+    fontWeight: '500',
+  } as TextStyle,
   input: {
-    backgroundColor: 'white',
-    borderColor: '#ddd',
+    backgroundColor: colors.surface,
+    borderColor: colors.inputBorder,
     borderWidth: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 10,
-    fontSize: 15,
-    color: '#333',
-  },
+    borderRadius: 12,
+    fontSize: 16,
+    color: colors.textHeading,
+  } as TextStyle,
+  inputReadOnly: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    color: colors.textMuted,
+  } as TextStyle,
+  inputError: {
+    borderColor: colors.error,
+  } as TextStyle,
   description: {
     fontSize: 12,
-    color: '#888',
+    color: colors.textMuted,
     paddingTop: 4,
-  },
+  } as TextStyle,
   error: {
     fontSize: 12,
-    color: '#e53935',
+    color: colors.error,
     paddingTop: 4,
-  },
+  } as TextStyle,
 });
 
 export {TextInput};
