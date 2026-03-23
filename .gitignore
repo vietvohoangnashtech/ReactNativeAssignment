@@ -60,3 +60,6 @@ ios/Podfile.lock
 # === Dependencies ===
 /node_modules
 /*/node_modules
+
+# === Developer Guides (local only) ===
+IMPLEMENTATION_GUIDE.md
