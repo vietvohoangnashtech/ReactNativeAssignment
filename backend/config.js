@@ -24,4 +24,10 @@ module.exports = {
     PAYPAL: "paypal",
     CASH_ON_DELIVERY: "cash_on_delivery",
   },
+  categories: {
+    ELECTRONICS: "electronics",
+    CLOTHING: "clothing",
+    FOOD: "food",
+    BOOKS: "books",
+  },
 };

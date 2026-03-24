@@ -14,12 +14,14 @@ const AuthorizationRoutes = require("./authorization/routes");
 const UserRoutes = require("./users/routes");
 const ProductRoutes = require("./products/routes");
 const OrderRoutes = require("./orders/routes");
+const CategoryRoutes = require("./categories/routes");
 
 // Sequelize model imports
 const UserModel = require("./common/models/User");
 const ProductModel = require("./common/models/Product");
 const OrderModel = require("./common/models/Order");
 const ProductReviewModel = require("./common/models/ProductReview");
+const CategoryModel = require("./common/models/Category");
 
 app.use(morgan("tiny"));
 app.use(cors());
@@ -45,6 +47,7 @@ UserModel.initialise(sequelize);
 ProductModel.initialise(sequelize);
 OrderModel.initialise(sequelize);
 ProductReviewModel.initialise(sequelize);
+CategoryModel.initialise(sequelize);
 
 // Syncing the models that are defined on sequelize with the tables that alredy exists
 // in the database. It creates models as tables that do not exist in the DB.
@@ -58,6 +61,7 @@ sequelize
     app.use("/user", UserRoutes);
     app.use("/product", ProductRoutes);
     app.use("/order", OrderRoutes);
+    app.use("/category", CategoryRoutes);
 
     app.listen(PORT, () => {
       console.log("Server Listening on PORT:", port);

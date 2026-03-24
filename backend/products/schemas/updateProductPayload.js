@@ -18,6 +18,9 @@ module.exports = {
       type: "string",
       enum: Object.values(productPriceUnits),
     },
+    category: {
+      type: "string",
+    },
   },
   additionalProperties: false,
 };

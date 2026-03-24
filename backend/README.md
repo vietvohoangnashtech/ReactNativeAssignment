@@ -162,14 +162,14 @@ curl --location 'localhost:3000/login' \
 
 ```
 curl --location 'localhost:3000/user' \
---header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsInVzZXJuYW1lIjoidmlldHZvIiwiaWF0IjoxNzc0MDAxOTI4LCJleHAiOjE3NzQwMDU1Mjh9.IP1U2prXZdKz3TwAAuNB7d3A40iVTXI36lwSfuDSigU'
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsInVzZXJuYW1lIjoidmlldHZvIiwiaWF0IjoxNzc0MzM5OTk1LCJleHAiOjE3NzQzNDM1OTV9.-87ccuqK-ZgQCDJ3hxXNLgE9TssSp04yNW61QtTZQ38'
 ```
 
 ### Get Products
 
 ```
 curl --location 'localhost:3000/product' \
---header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsInVzZXJuYW1lIjoidmlldHZvIiwiaWF0IjoxNzc0MDAxOTI4LCJleHAiOjE3NzQwMDU1Mjh9.IP1U2prXZdKz3TwAAuNB7d3A40iVTXI36lwSfuDSigU'
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsInVzZXJuYW1lIjoidmlldHZvIiwiaWF0IjoxNzc0MzM5OTk1LCJleHAiOjE3NzQzNDM1OTV9.-87ccuqK-ZgQCDJ3hxXNLgE9TssSp04yNW61QtTZQ38'
 ```
 
 ## License

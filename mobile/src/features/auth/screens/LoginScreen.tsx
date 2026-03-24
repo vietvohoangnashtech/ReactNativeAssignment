@@ -129,7 +129,7 @@ const LoginScreen = (): React.JSX.Element => {
           <View style={styles.form}>
             <TextInput
               label="Username"
-              placeholder="johndoe123"
+              placeholder="Username"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
@@ -140,19 +140,19 @@ const LoginScreen = (): React.JSX.Element => {
               <>
                 <TextInput
                   label="First Name"
-                  placeholder="John"
+                  placeholder="First Name"
                   value={firstName}
                   onChangeText={setFirstName}
                 />
                 <TextInput
                   label="Last Name"
-                  placeholder="Doe"
+                  placeholder="Last Name"
                   value={lastName}
                   onChangeText={setLastName}
                 />
                 <TextInput
                   label="Email"
-                  placeholder="john@example.com"
+                  placeholder="Email Address"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -161,7 +161,7 @@ const LoginScreen = (): React.JSX.Element => {
                 />
                 <TextInput
                   label="Age"
-                  placeholder="25"
+                  placeholder="Age"
                   value={age}
                   onChangeText={setAge}
                   keyboardType="number-pad"
@@ -217,7 +217,7 @@ const LoginScreen = (): React.JSX.Element => {
                 label="Sign in with Biometrics"
                 variant="outline"
                 icon={
-                  <Feather name="smartphone" size={20} color={colors.primary} />
+                  <Feather name="fingerprint" size={20} color={colors.primary} />
                 }
                 onPress={() => handleComingSoon('Biometric sign in')}
               />

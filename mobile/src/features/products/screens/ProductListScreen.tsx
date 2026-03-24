@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Feather from 'react-native-vector-icons/Feather';
 import {useProducts} from '../hooks/useProducts';
+import {useCategories} from '../hooks/useCategories';
 import {useAppDispatch} from '../../../store/store';
 import {addItem} from '../../cart/store/cartSlice';
 import {colors} from '../../../theme';
@@ -26,18 +27,17 @@ const PRICE_SYMBOL: Record<string, string> = {
   inr: '₹',
 };
 
-const CATEGORIES = ['All', 'Electronics', 'Clothing', 'Food', 'Books'];
-
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ProductListScreen = (): React.JSX.Element => {
   const navigation = useNavigation<NavProp>();
   const dispatch = useAppDispatch();
   const {products, loading, error, refetch} = useProducts();
+  const {categories} = useCategories();
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-
+  
   const filtered = useMemo(() => {
     let list = products;
     if (search.trim()) {
@@ -45,11 +45,8 @@ const ProductListScreen = (): React.JSX.Element => {
       list = list.filter(p => p.name.toLowerCase().includes(q));
     }
     if (category !== 'All') {
-      const q = category.toLowerCase();
       list = list.filter(
-        p =>
-          p.name.toLowerCase().includes(q) ||
-          (p.description && p.description.toLowerCase().includes(q)),
+        p => p.category?.toLowerCase() === category.toLowerCase(),
       );
     }
     return list;
@@ -101,6 +98,9 @@ const ProductListScreen = (): React.JSX.Element => {
             <Text style={styles.name} numberOfLines={2}>
               {item.name}
             </Text>
+            {item.category ? (
+              <Text style={styles.categoryLabel}>{item.category}</Text>
+            ) : null}
             <View style={styles.priceRow}>
               <Text style={styles.price}>
                 {symbol}
@@ -153,22 +153,22 @@ const ProductListScreen = (): React.JSX.Element => {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={CATEGORIES}
-          keyExtractor={c => c}
+          data={categories}
+          keyExtractor={c => String(c.id)}
           contentContainerStyle={styles.categoryList}
           renderItem={({item: cat}) => (
             <TouchableOpacity
               style={[
                 styles.categoryChip,
-                category === cat && styles.categoryChipActive,
+                category === cat.name && styles.categoryChipActive,
               ]}
-              onPress={() => setCategory(cat)}>
+              onPress={() => setCategory(cat.name)}>
               <Text
                 style={[
                   styles.categoryChipText,
-                  category === cat && styles.categoryChipTextActive,
+                  category === cat.name && styles.categoryChipTextActive,
                 ]}>
-                {cat}
+                {cat.name}
               </Text>
             </TouchableOpacity>
           )}
@@ -266,6 +266,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: colors.textMuted,
+    textTransform: 'capitalize',
+    includeFontPadding: false,
+    textAlignVertical: 'center'
   },
   categoryChipTextActive: {
     color: colors.textHeading,
@@ -322,7 +325,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardBody: {padding: 10},
-  name: {fontSize: 13, fontWeight: '600', color: colors.textHeading, marginBottom: 6},
+  name: {fontSize: 13, fontWeight: '600', color: colors.textHeading, marginBottom: 4},
+  categoryLabel: {
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16,
+    letterSpacing: 0,
+    color: '#6B7280',
+    marginBottom: 4,
+    textTransform: 'capitalize',
+  },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',

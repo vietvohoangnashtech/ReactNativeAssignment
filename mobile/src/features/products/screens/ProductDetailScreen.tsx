@@ -139,6 +139,9 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
         {/* Info */}
         <View style={styles.infoSection}>
           <Text style={styles.productName}>{product.name}</Text>
+          {product.category ? (
+            <Text style={styles.categoryLabel}>{product.category}</Text>
+          ) : null}
           <View style={styles.priceRatingRow}>
             <Text style={styles.price}>
               {symbol}
@@ -299,7 +302,16 @@ const styles = StyleSheet.create({
   productImage: {width: '100%', height: '100%', resizeMode: 'cover'},
   imagePlaceholder: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   infoSection: {padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border},
-  productName: {fontSize: 20, fontWeight: '700', color: colors.textHeading, marginBottom: 8},
+  productName: {fontSize: 20, fontWeight: '700', color: colors.textHeading, marginBottom: 4},
+  categoryLabel: {
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16,
+    letterSpacing: 0,
+    color: '#6B7280',
+    marginBottom: 8,
+    textTransform: 'capitalize',
+  },
   priceRatingRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   price: {fontSize: 22, fontWeight: '700', color: colors.primary},
   ratingBadge: {

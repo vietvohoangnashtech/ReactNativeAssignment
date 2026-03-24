@@ -28,6 +28,11 @@ const ProductModel = {
     allowNull: false,
     defaultValue: productPriceUnits.DOLLAR,
   },
+  category: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null,
+  },
 };
 
 module.exports = {

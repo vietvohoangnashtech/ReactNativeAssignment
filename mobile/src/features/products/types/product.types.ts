@@ -5,6 +5,7 @@ export interface Product {
   image: string;
   price: number;
   priceUnit: 'dollar' | 'euro' | 'inr';
+  category?: string;
 }
 
 export interface ProductReview {
