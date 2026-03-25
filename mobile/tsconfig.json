@@ -5,6 +5,7 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
+    "experimentalDecorators": true,
     "types": ["jest"]
   },
   "include": ["**/*.ts", "**/*.tsx"],

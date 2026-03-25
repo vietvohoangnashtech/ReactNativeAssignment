@@ -1,11 +1,17 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
+import {cartRepository} from '../../../services/database/repositories/cartRepository';
 import type {CartItem} from '../types/cart.types';
 
 interface CartState {
   items: CartItem[];
+  hydrated: boolean;
 }
 
-const initialState: CartState = {items: []};
+const initialState: CartState = {items: [], hydrated: false};
+
+export const loadCartFromDB = createAsyncThunk('cart/loadFromDB', async () => {
+  return cartRepository.loadCart();
+});
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -40,6 +46,12 @@ const cartSlice = createSlice({
       state.items = [];
     },
   },
+  extraReducers: builder => {
+    builder.addCase(loadCartFromDB.fulfilled, (state, {payload}) => {
+      state.items = payload;
+      state.hydrated = true;
+    });
+  },
 });
 
 export const {addItem, removeItem, updateQuantity, clearCart} = cartSlice.actions;
@@ -49,5 +61,7 @@ export const selectCartTotal = (state: {cart: CartState}) =>
   state.cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 export const selectCartItemCount = (state: {cart: CartState}) =>
   state.cart.items.reduce((sum, i) => sum + i.quantity, 0);
+export const selectCartHydrated = (state: {cart: CartState}) =>
+  state.cart.hydrated;
 
 export default cartSlice.reducer;

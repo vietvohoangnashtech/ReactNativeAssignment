@@ -95,6 +95,11 @@ android {
             keyPassword 'android'
         }
     }
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/libfbjni.so'
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug

@@ -1,6 +1,6 @@
 # Mobile — React Native Shopping App
 
-A React Native shopping app (v0.84.1 + TypeScript) with feature-first architecture, Redux Toolkit state management, JWT authentication, and a cyan-accented design system.
+A React Native shopping app (v0.84.1 + TypeScript) with feature-first architecture, Redux Toolkit state management, JWT authentication, WatermelonDB local persistence, and a cyan-accented design system.
 
 ---
 
@@ -51,11 +51,18 @@ mobile/
 │   ├── features/               # Feature-first modules
 │   │   ├── auth/               # Login / Register
 │   │   ├── products/           # Product list, detail, reviews
-│   │   ├── cart/               # Cart management, Checkout
+│   │   ├── cart/               # Cart management, Checkout (persisted locally)
 │   │   ├── orders/             # Order history
-│   │   └── profile/            # User profile (with offline cache)
+│   │   └── profile/            # User profile (offline cache via WatermelonDB)
 │   ├── navigation/             # React Navigation setup
-│   ├── services/api/           # Axios client + JWT interceptors
+│   ├── services/
+│   │   ├── api/                # Axios client + JWT interceptors
+│   │   └── database/           # WatermelonDB setup, models, repositories
+│   │       ├── database.ts     # DB instance + DatabaseProvider
+│   │       ├── schema.ts       # Table definitions (profiles, cart_items, …)
+│   │       ├── migrations.ts   # Versioned schema migrations
+│   │       ├── models/         # WatermelonDB Model classes
+│   │       └── repositories/   # CRUD helpers (profileRepository, cartRepository)
 │   ├── store/                  # Redux Toolkit store + rootReducer
 │   └── types/api/              # Shared API response types
 └── __tests__/
@@ -73,7 +80,8 @@ mobile/
 | State | Redux Toolkit 2 + React Context |
 | HTTP | Axios with JWT interceptors |
 | Secure storage | react-native-encrypted-storage |
-| Cache | @react-native-async-storage/async-storage |
+| Local database | @nozbe/watermelondb (SQLite, reactive, offline-first) |
+| Cache (key-value) | @react-native-async-storage/async-storage |
 | Icons | react-native-vector-icons (Feather set) |
 | Testing | Jest + React Test Renderer |
 
@@ -119,6 +127,62 @@ Navigation is split into three layers:
 
 ---
 
+## Local Database (WatermelonDB)
+
+The app uses **WatermelonDB** (built on SQLite) as its local persistence layer. Redux Toolkit remains the UI state layer; WatermelonDB is the on-device storage layer.
+
+### Why WatermelonDB over AsyncStorage / Realm / PouchDB
+
+| | AsyncStorage | **WatermelonDB** | Realm | PouchDB |
+|---|---|---|---|---|
+| Structured queries | ❌ | ✅ | ✅ | ⚠️ |
+| Reactive live data | ❌ | ✅ | ✅ | ⚠️ |
+| Schema migrations | ❌ | ✅ | ✅ | ❌ |
+| Bundle size | tiny | ~600 KB | ~7 MB | ~1.5 MB |
+| Offline-first | ⚠️ | ✅ | ✅ | ✅ |
+| Open-source / no lock | ✅ | ✅ | ⚠️ (Atlas Sync = paid) | ✅ |
+
+**AsyncStorage** is a flat key-value store — it has no schema, no migrations, and no query capability. It is kept for small primitives (auth token, preferences) but is **no longer used for structured feature data**.
+
+**Realm** was ruled out due to its ~7 MB native module size and MongoDB Atlas Sync vendor lock-in.
+
+**PouchDB** was ruled out because there is no CouchDB/CouchBase backend and React Native adapter support is fragile.
+
+### Persisted data
+
+| Table | Feature | Behaviour |
+|---|---|---|
+| `profiles` | Profile | Cached after successful `GET /user`; served offline with banner |
+| `cart_items` | Cart | Synced on every cart change via debounced `store.subscribe()`; restored on app boot |
+| `search_history` *(planned)* | Products | Last 20 queries; drives search dropdown |
+| `wishlist_items` *(planned)* | Wishlist | Heart-toggled products; synced to server when online |
+| `recently_viewed` *(planned)* | Products | Last 10 viewed products; horizontal carousel on list screen |
+
+### Data flow
+
+```
+App boot  →  WatermelonDB  →  dispatch loadCartFromDB  →  Redux store
+User action  →  Redux store  →  WatermelonDB write (debounced 300 ms)
+API success  →  WatermelonDB write  →  Redux store update
+```
+
+---
+
+## Planned Features
+
+| Feature | Description | Requires |
+|---|---|---|
+| **Search History** | Persist last 20 queries; show in search bar dropdown; clear from Profile | WatermelonDB `search_history` table |
+| **Wishlist / Saved Items** | Heart icon on product cards; dedicated screen; sync to `POST /user/wishlist` | WatermelonDB `wishlist_items` table |
+| **Recently Viewed** | Track last 10 viewed products; horizontal carousel on Discover screen | WatermelonDB `recently_viewed` table |
+| **Order History Cache** | Cache fetched orders; show stale data offline with badge | WatermelonDB `orders` table |
+| **Cart Abandonment Banner** | Sticky banner when cart has items and user navigates away | Reactive WatermelonDB cart count |
+| **Price Drop Alerts** | Push notification when a wishlisted item's price drops | Wishlist feature + FCM integration |
+
+Planning documents for these features live in `docs/planning/features/`.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -128,6 +192,11 @@ Navigation is split into three layers:
 | Icons not rendering | Rebuild the app after `npm install` (native module) |
 | 401 Unauthorized | Backend JWT is 1 hr — re-login or restart backend |
 | Network error on device | Replace `10.0.2.2` with your machine's LAN IP in `src/services/api/client.ts` |
+| WatermelonDB crash on Android | Ensure `pickFirst '**/libc++_shared.so'` is set in `android/app/build.gradle` `packagingOptions` |
+| WatermelonDB crash on iOS | Run `bundle exec pod install` after `npm install` |
+| Decorators not recognised | Confirm `@babel/plugin-proposal-decorators` is listed in `babel.config.js` with `legacy: true` |
+| Cart not restoring on boot | Check `loadCartFromDB` thunk is dispatched in `App.tsx` before navigator renders |
+| DB migration error | Bump `migrations.ts` version and add `addColumns`/`addTable` migration step |
 
 ---
 

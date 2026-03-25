@@ -1,9 +1,7 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {profileRepository} from '../../../services/database/repositories/profileRepository';
 import {userService} from '../services/userService';
 import type {UserProfile, UpdateProfilePayload} from '../types/profile.types';
-
-const CACHE_KEY = 'profile_cache';
 
 interface ProfileState {
   data: UserProfile | null;
@@ -26,12 +24,12 @@ export const fetchProfile = createAsyncThunk(
   async (_, {rejectWithValue}) => {
     try {
       const profile = await userService.getProfile();
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(profile));
+      await profileRepository.saveProfile(profile);
       return {profile, isOffline: false};
     } catch {
-      const cached = await AsyncStorage.getItem(CACHE_KEY);
+      const cached = await profileRepository.getProfile();
       if (cached) {
-        return {profile: JSON.parse(cached) as UserProfile, isOffline: true};
+        return {profile: cached, isOffline: true};
       }
       return rejectWithValue('Failed to load profile');
     }
@@ -43,7 +41,7 @@ export const updateProfile = createAsyncThunk(
   async (payload: UpdateProfilePayload, {rejectWithValue}) => {
     try {
       const profile = await userService.updateProfile(payload);
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(profile));
+      await profileRepository.saveProfile(profile);
       return profile;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update profile';
