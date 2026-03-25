@@ -40,10 +40,15 @@ export const fetchProfile = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   'profile/update',
-  async (payload: UpdateProfilePayload) => {
-    const profile = await userService.updateProfile(payload);
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(profile));
-    return profile;
+  async (payload: UpdateProfilePayload, {rejectWithValue}) => {
+    try {
+      const profile = await userService.updateProfile(payload);
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(profile));
+      return profile;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update profile';
+      return rejectWithValue(message);
+    }
   },
 );
 
@@ -74,13 +79,16 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.pending, state => {
         state.saving = true;
+        state.error = null;
       })
       .addCase(updateProfile.fulfilled, (state, {payload}) => {
         state.saving = false;
         state.data = payload;
+        state.error = null;
       })
-      .addCase(updateProfile.rejected, state => {
+      .addCase(updateProfile.rejected, (state, {payload}) => {
         state.saving = false;
+        state.error = (payload as string) ?? 'Failed to update profile';
       });
   },
 });

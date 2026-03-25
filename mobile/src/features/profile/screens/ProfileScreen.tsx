@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,16 +9,17 @@ import {
   View,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import {useAuthContext} from '../../../contexts/AuthContext';
-import {authService} from '../../auth/services/authService';
-import {useProfile} from '../hooks/useProfile';
-import {TextInput} from '../../../components/ui/TextInput/TextInput';
-import {ScreenHeader} from '../../../components/ui/ScreenHeader/ScreenHeader';
-import {colors} from '../../../theme';
+import { useAuthContext } from '../../../contexts/AuthContext';
+import { authService } from '../../auth/services/authService';
+import { useProfile } from '../hooks/useProfile';
+import { TextInput } from '../../../components/ui/TextInput/TextInput';
+import { Button } from '../../../components/ui/Button/Button';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader/ScreenHeader';
+import { colors } from '../../../theme';
 
 const ProfileScreen = (): React.JSX.Element => {
-  const {logout} = useAuthContext();
-  const {profile, loading, saving, error, isOffline, saveProfile} = useProfile();
+  const { logout } = useAuthContext();
+  const { profile, loading, saving, error, isOffline, saveProfile } = useProfile();
 
   const [isEdit, setIsEdit] = useState(false);
   const [firstName, setFirstName] = useState('');
@@ -35,12 +36,15 @@ const ProfileScreen = (): React.JSX.Element => {
   }, [profile]);
 
   const handleSave = useCallback(async () => {
+    if (saving) return; // Prevent multiple concurrent saves
+
     setSaveError(null);
     const parsedAge = parseInt(age, 10);
     if (age.trim() && (isNaN(parsedAge) || parsedAge < 1)) {
       setSaveError('Please enter a valid age');
       return;
     }
+
     try {
       await saveProfile({
         firstName: firstName.trim(),
@@ -51,11 +55,11 @@ const ProfileScreen = (): React.JSX.Element => {
     } catch {
       setSaveError('Failed to save profile');
     }
-  }, [firstName, lastName, age, saveProfile]);
+  }, [firstName, lastName, age, saveProfile, saving]);
 
   const handleLogout = useCallback(() => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
-      {text: 'Cancel', style: 'cancel'},
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
         style: 'destructive',
@@ -120,12 +124,12 @@ const ProfileScreen = (): React.JSX.Element => {
             <Text style={styles.cardTitle}>Account Details</Text>
             <TouchableOpacity
               style={styles.editBtn}
-              onPress={() => {setIsEdit(e => !e); setSaveError(null);}}>
-              <Feather
-                name={isEdit ? 'x' : 'edit-2'}
-                size={14}
-                color={colors.primary}
-              />
+              onPress={() => {
+                setIsEdit(e => !e);
+                setSaveError(null);
+              }}
+            >
+              <Feather name={isEdit ? 'x' : 'edit-2'} size={14} color={colors.primary} />
               <Text style={styles.editLink}>{isEdit ? 'Cancel' : 'Edit'}</Text>
             </TouchableOpacity>
           </View>
@@ -142,32 +146,16 @@ const ProfileScreen = (): React.JSX.Element => {
 
           {isEdit ? (
             <>
-              <TextInput
-                label="First Name"
-                value={firstName}
-                onChangeText={setFirstName}
+              <TextInput label="First Name" value={firstName} onChangeText={setFirstName} />
+              <TextInput label="Last Name" value={lastName} onChangeText={setLastName} />
+              <TextInput label="Age" value={age} onChangeText={setAge} keyboardType="number-pad" />
+              {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
+              <Button
+                label="Save Changes"
+                onPress={handleSave}
+                loading={saving}
+                disabled={saving}
               />
-              <TextInput
-                label="Last Name"
-                value={lastName}
-                onChangeText={setLastName}
-              />
-              <TextInput
-                label="Age"
-                value={age}
-                onChangeText={setAge}
-                keyboardType="number-pad"
-              />
-              {saveError ? (
-                <Text style={styles.saveError}>{saveError}</Text>
-              ) : null}
-              {saving ? (
-                <ActivityIndicator color={colors.primary} style={styles.savingIndicator} />
-              ) : (
-                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                  <Text style={styles.saveBtnText}>Save Changes</Text>
-                </TouchableOpacity>
-              )}
             </>
           ) : (
             <>
@@ -190,9 +178,9 @@ const ProfileScreen = (): React.JSX.Element => {
         {/* Menu Items */}
         <View style={styles.menuCard}>
           {[
-            {icon: 'settings', label: 'Settings'},
-            {icon: 'help-circle', label: 'Help & Support'},
-            {icon: 'shield', label: 'Privacy Policy'},
+            { icon: 'settings', label: 'Settings' },
+            { icon: 'help-circle', label: 'Help & Support' },
+            { icon: 'shield', label: 'Privacy Policy' },
           ].map(item => (
             <TouchableOpacity key={item.icon} style={styles.menuItem}>
               <View style={styles.menuIconWrap}>
@@ -215,8 +203,8 @@ const ProfileScreen = (): React.JSX.Element => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.background},
-  center: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   offlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -226,7 +214,7 @@ const styles = StyleSheet.create({
     margin: 12,
     borderRadius: 10,
   },
-  offlineText: {color: '#92400E', fontSize: 13, flex: 1},
+  offlineText: { color: '#92400E', fontSize: 13, flex: 1 },
   identityCard: {
     alignItems: 'center',
     paddingVertical: 28,
@@ -245,16 +233,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  avatarText: {color: colors.textHeading, fontSize: 32, fontWeight: '700'},
-  displayName: {fontSize: 20, fontWeight: '700', color: colors.textHeading},
-  usernameHandle: {fontSize: 14, color: colors.textDisabled, marginTop: 2},
+  avatarText: { color: colors.textHeading, fontSize: 32, fontWeight: '700' },
+  displayName: { fontSize: 20, fontWeight: '700', color: colors.textHeading },
+  usernameHandle: { fontSize: 14, color: colors.textDisabled, marginTop: 2 },
   emailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginTop: 8,
   },
-  emailText: {fontSize: 13, color: colors.textMuted},
+  emailText: { fontSize: 13, color: colors.textMuted },
   card: {
     backgroundColor: colors.surface,
     marginHorizontal: 12,
@@ -272,13 +260,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
   },
-  cardTitle: {fontSize: 16, fontWeight: '700', color: colors.textHeading},
+  cardTitle: { fontSize: 16, fontWeight: '700', color: colors.textHeading },
   editBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  editLink: {color: colors.primary, fontSize: 14, fontWeight: '600'},
+  editLink: { color: colors.primary, fontSize: 14, fontWeight: '600' },
   readonlyRow: {
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -291,17 +279,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 2,
   },
-  readonlyValue: {fontSize: 15, color: colors.textHeading},
-  saveError: {color: colors.error, fontSize: 13, marginBottom: 8, textAlign: 'center'},
-  savingIndicator: {marginVertical: 12},
-  saveBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveBtnText: {color: colors.textHeading, fontWeight: '700', fontSize: 15},
+  readonlyValue: { fontSize: 15, color: colors.textHeading },
+  saveError: { color: colors.error, fontSize: 13, marginBottom: 8, textAlign: 'center' },
   menuCard: {
     backgroundColor: colors.surface,
     marginHorizontal: 12,
@@ -347,7 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.errorLight,
   },
-  logoutText: {color: colors.error, fontWeight: '700', fontSize: 16},
+  logoutText: { color: colors.error, fontWeight: '700', fontSize: 16 },
 });
 
-export {ProfileScreen};
+export { ProfileScreen };

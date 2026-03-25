@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,6 +20,7 @@ interface ButtonProps {
   disabled?: boolean;
   variant?: ButtonVariant;
   icon?: React.ReactNode;
+  loading?: boolean;
 }
 
 const Button = ({
@@ -29,12 +31,13 @@ const Button = ({
   disabled,
   variant = 'primary',
   icon,
+  loading = false,
 }: ButtonProps): React.JSX.Element => {
   const buttonStyle = [
     styles.button,
     variant === 'outline' && styles.outline,
     variant === 'ghost' && styles.ghost,
-    disabled && styles.disabled,
+    (disabled || loading) && styles.disabled,
     style,
   ];
 
@@ -49,9 +52,11 @@ const Button = ({
     <TouchableOpacity
       style={buttonStyle}
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
       activeOpacity={0.8}>
-      {icon ? (
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.textHeading} />
+      ) : icon ? (
         <View style={styles.iconRow}>
           {icon}
           <Text style={labelStyle}>{label}</Text>

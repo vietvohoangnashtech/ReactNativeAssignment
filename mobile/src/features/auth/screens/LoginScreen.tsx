@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import MatIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {TextInput} from '../../../components/ui/TextInput/TextInput';
 import {Button} from '../../../components/ui/Button/Button';
 import {useAuthContext} from '../../../contexts/AuthContext';
@@ -217,7 +218,7 @@ const LoginScreen = (): React.JSX.Element => {
                 label="Sign in with Biometrics"
                 variant="outline"
                 icon={
-                  <Feather name="fingerprint" size={20} color={colors.primary} />
+                  <MatIcon name="fingerprint" size={20} color={colors.primary} />
                 }
                 onPress={() => handleComingSoon('Biometric sign in')}
               />
