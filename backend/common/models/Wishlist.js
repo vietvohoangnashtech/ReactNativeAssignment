@@ -18,7 +18,7 @@ const WishlistModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("wishlist", WishlistModel, {
+    module.exports.model = sequelize.define("wishlist", WishlistModel, {
       indexes: [
         {
           unique: true,
@@ -29,18 +29,18 @@ module.exports = {
   },
 
   findWishlistItem: (query) => {
-    return this.model.findOne({ where: query });
+    return module.exports.model.findOne({ where: query });
   },
 
   findAllWishlistItems: (query) => {
-    return this.model.findAll({ where: query });
+    return module.exports.model.findAll({ where: query });
   },
 
   createWishlistItem: (data) => {
-    return this.model.create(data);
+    return module.exports.model.create(data);
   },
 
   deleteWishlistItem: (query) => {
-    return this.model.destroy({ where: query });
+    return module.exports.model.destroy({ where: query });
   },
 };

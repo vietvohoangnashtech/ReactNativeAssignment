@@ -15,26 +15,26 @@ const CategoryModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("category", CategoryModel);
+    module.exports.model = sequelize.define("category", CategoryModel);
   },
 
   createCategory: (data) => {
-    return this.model.create(data);
+    return module.exports.model.create(data);
   },
 
   findCategory: (query) => {
-    return this.model.findOne({ where: query });
+    return module.exports.model.findOne({ where: query });
   },
 
   findAllCategories: (query = {}) => {
-    return this.model.findAll({ where: query });
+    return module.exports.model.findAll({ where: query });
   },
 
   updateCategory: (query, updatedValue) => {
-    return this.model.update(updatedValue, { where: query });
+    return module.exports.model.update(updatedValue, { where: query });
   },
 
   deleteCategory: (query) => {
-    return this.model.destroy({ where: query });
+    return module.exports.model.destroy({ where: query });
   },
 };

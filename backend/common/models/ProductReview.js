@@ -26,7 +26,7 @@ const ProductReviewModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("productreview", ProductReviewModel, {
+    module.exports.model = sequelize.define("productreview", ProductReviewModel, {
       indexes: [
         {
           unique: true,
@@ -37,17 +37,17 @@ module.exports = {
   },
 
   createReview: (data) => {
-    return this.model.create(data);
+    return module.exports.model.create(data);
   },
 
   findReview: (query) => {
-    return this.model.findOne({
+    return module.exports.model.findOne({
       where: query,
     });
   },
 
   findAllReviews: (query) => {
-    return this.model.findAll({
+    return module.exports.model.findAll({
       where: query,
       include: [
         {

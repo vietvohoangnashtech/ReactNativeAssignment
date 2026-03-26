@@ -23,7 +23,7 @@ const CartModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("cart", CartModel, {
+    module.exports.model = sequelize.define("cart", CartModel, {
       indexes: [
         {
           unique: true,
@@ -34,17 +34,17 @@ module.exports = {
   },
 
   findUserCart: (userId) => {
-    return this.model.findAll({ where: { userId } });
+    return module.exports.model.findAll({ where: { userId } });
   },
 
   upsertCartItem: (userId, productId, quantity) => {
-    return this.model.upsert({ userId, productId, quantity });
+    return module.exports.model.upsert({ userId, productId, quantity });
   },
 
   replaceUserCart: async (userId, items) => {
-    await this.model.destroy({ where: { userId } });
+    await module.exports.model.destroy({ where: { userId } });
     if (items.length === 0) return [];
-    return this.model.bulkCreate(
+    return module.exports.model.bulkCreate(
       items.map((item) => ({
         userId,
         productId: item.productId,
@@ -54,6 +54,6 @@ module.exports = {
   },
 
   clearUserCart: (userId) => {
-    return this.model.destroy({ where: { userId } });
+    return module.exports.model.destroy({ where: { userId } });
   },
 };

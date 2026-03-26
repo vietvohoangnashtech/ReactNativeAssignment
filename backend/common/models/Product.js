@@ -37,33 +37,33 @@ const ProductModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("product", ProductModel)
+    module.exports.model = sequelize.define("product", ProductModel)
   },
 
   createProduct: (user) => {
-    return this.model.create(user);
+    return module.exports.model.create(user);
   },
 
   findProduct: (query) => {
-    return this.model.findOne({
+    return module.exports.model.findOne({
       where: query,
     });
   },
 
   updateProduct: (query, updatedValue) => {
-    return this.model.update(updatedValue, {
+    return module.exports.model.update(updatedValue, {
       where: query,
     });
   },
 
   findAllProducts: (query) => {
-    return this.model.findAll({
+    return module.exports.model.findAll({
       where: query
     });
   },
 
   deleteProduct: (query) => {
-    return this.model.destroy({
+    return module.exports.model.destroy({
       where: query
     });
   }

@@ -60,40 +60,40 @@ const UserModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("user", UserModel);
+    module.exports.model = sequelize.define("user", UserModel);
   },
 
   createUser: (user) => {
-    return this.model.create(user);
+    return module.exports.model.create(user);
   },
 
   findUser: (query) => {
-    return this.model.findOne({
+    return module.exports.model.findOne({
       where: query,
     });
   },
 
   findOrCreateUser: (query, defaults) => {
-    return this.model.findOrCreate({
+    return module.exports.model.findOrCreate({
       where: query,
       defaults,
     });
   },
 
   updateUser: (query, updatedValue) => {
-    return this.model.update(updatedValue, {
+    return module.exports.model.update(updatedValue, {
       where: query,
     });
   },
 
   findAllUsers: (query) => {
-    return this.model.findAll({
+    return module.exports.model.findAll({
       where: query
     });
   },
 
   deleteUser: (query) => {
-    return this.model.destroy({
+    return module.exports.model.destroy({
       where: query
     });
   }

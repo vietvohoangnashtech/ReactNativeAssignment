@@ -41,27 +41,27 @@ const OrderModel = {
 
 module.exports = {
   initialise: (sequelize) => {
-    this.model = sequelize.define("order", OrderModel);
+    module.exports.model = sequelize.define("order", OrderModel);
   },
 
   createOrder: (order) => {
-    return this.model.create(order);
+    return module.exports.model.create(order);
   },
 
   findOrder: (query) => {
-    return this.model.findOne({
+    return module.exports.model.findOne({
       where: query,
     });
   },
 
   updateOrder: (query, updatedValue) => {
-    return this.model.update(updatedValue, {
+    return module.exports.model.update(updatedValue, {
       where: query,
     });
   },
 
   findAllOrders: (query) => {
-    return this.model.findAll({
+    return module.exports.model.findAll({
       where: query,
     });
   },

@@ -27,6 +27,9 @@ const CategoryModel = require("./common/models/Category");
 const WishlistModel = require("./common/models/Wishlist");
 const CartModel = require("./common/models/Cart");
 
+// Seed function for development
+const seedDatabase = require("./seed");
+
 app.use(morgan("tiny"));
 app.use(cors());
 
@@ -62,8 +65,18 @@ ProductReviewModel.model.belongsTo(UserModel.model, { foreignKey: 'userId' });
 // in the database. It creates models as tables that do not exist in the DB.
 sequelize
   .sync({ alter: true })
-  .then(() => {
+  .then(async () => {
     console.log("Sequelize Initialised!!");
+
+    // Seed database in development mode only
+    const isDevelopment = process.env.NODE_ENV !== "production";
+    if (isDevelopment) {
+      try {
+        await seedDatabase();
+      } catch (error) {
+        console.error("Seeding failed:", error.message);
+      }
+    }
 
     // Attaching the Authentication and User Routes to the app.
     app.use("/", AuthorizationRoutes);
