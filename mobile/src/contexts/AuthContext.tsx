@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {jwtDecode} from 'jwt-decode';
+import {biometricService} from '../features/auth/services/biometricService';
 import type {User} from '../features/auth/types/auth.types';
 
 interface AuthContextValue {
@@ -14,7 +15,11 @@ interface AuthContextValue {
   token: string | null;
   user: User | null;
   loading: boolean;
+  biometricAvailable: boolean;
   login: (token: string, user: User) => Promise<void>;
+  loginWithBiometric: () => Promise<boolean>;
+  enableBiometric: () => Promise<void>;
+  disableBiometric: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
@@ -30,6 +35,7 @@ const AuthProvider = ({children}: AuthProviderProps): React.JSX.Element => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   useEffect(() => {
     const loadToken = async () => {
@@ -52,6 +58,9 @@ const AuthProvider = ({children}: AuthProviderProps): React.JSX.Element => {
             }
           }
         }
+        // Check biometric availability
+        const bioEnabled = await biometricService.isBiometricEnabled();
+        setBiometricAvailable(bioEnabled);
       } catch {
         // storage read error — stay logged out
       } finally {
@@ -69,6 +78,39 @@ const AuthProvider = ({children}: AuthProviderProps): React.JSX.Element => {
     setIsLoggedIn(true);
   }, []);
 
+  const loginWithBiometric = useCallback(async (): Promise<boolean> => {
+    const credentials = await biometricService.getStoredCredentials();
+    if (!credentials) {
+      return false;
+    }
+    const decoded = jwtDecode(credentials.token);
+    const isExpired = decoded.exp ? Date.now() >= decoded.exp * 1000 : true;
+    if (isExpired) {
+      await biometricService.disableBiometric();
+      setBiometricAvailable(false);
+      return false;
+    }
+    const storedUser = JSON.parse(credentials.userJson) as User;
+    await EncryptedStorage.setItem('auth_token', credentials.token);
+    await EncryptedStorage.setItem('auth_user', credentials.userJson);
+    setToken(credentials.token);
+    setUser(storedUser);
+    setIsLoggedIn(true);
+    return true;
+  }, []);
+
+  const enableBiometric = useCallback(async () => {
+    if (token && user) {
+      await biometricService.enableBiometric(token, JSON.stringify(user));
+      setBiometricAvailable(true);
+    }
+  }, [token, user]);
+
+  const disableBiometric = useCallback(async () => {
+    await biometricService.disableBiometric();
+    setBiometricAvailable(false);
+  }, []);
+
   const logout = useCallback(async () => {
     await EncryptedStorage.removeItem('auth_token');
     await EncryptedStorage.removeItem('auth_user');
@@ -84,7 +126,7 @@ const AuthProvider = ({children}: AuthProviderProps): React.JSX.Element => {
 
   return (
     <AuthContext.Provider
-      value={{isLoggedIn, token, user, loading, login, logout, updateUser}}>
+      value={{isLoggedIn, token, user, loading, biometricAvailable, login, loginWithBiometric, enableBiometric, disableBiometric, logout, updateUser}}>
       {children}
     </AuthContext.Provider>
   );

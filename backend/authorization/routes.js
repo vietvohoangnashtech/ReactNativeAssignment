@@ -2,6 +2,7 @@ const router = require("express").Router();
 
 // Controller Imports
 const AuthorizationController = require("./controllers/AuthorizationController");
+const SocialAuthController = require("./controllers/SocialAuthController");
 
 // Middleware Imports
 const SchemaValidationMiddleware = require("../common/middlewares/SchemaValidationMiddleware");
@@ -142,5 +143,13 @@ router.post(
   [isAuthenticatedMiddleware.check],
   AuthorizationController.logout,
 );
+
+// Social Auth Routes
+router.post("/auth/google", SocialAuthController.googleLogin);
+router.post("/auth/facebook", SocialAuthController.facebookLogin);
+
+// Password Recovery Routes
+router.post("/auth/forgot-password", SocialAuthController.forgotPassword);
+router.post("/auth/reset-password", SocialAuthController.resetPassword);
 
 module.exports = router;

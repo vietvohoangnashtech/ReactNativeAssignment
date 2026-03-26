@@ -4,6 +4,7 @@ import {Provider} from 'react-redux';
 import {configureStore} from '@reduxjs/toolkit';
 import {useProducts} from './useProducts';
 import {productService} from '../services/productService';
+import {productCacheRepository} from '../../../services/database/repositories/productCacheRepository';
 import rootReducer from '../../../store/rootReducer';
 import type {Product} from '../types/product.types';
 
@@ -24,8 +25,34 @@ jest.mock('../../../services/database/repositories/profileRepository', () => ({
   },
 }));
 
+jest.mock('../../../services/database/repositories/productCacheRepository', () => ({
+  productCacheRepository: {
+    getCachedProducts: jest.fn().mockResolvedValue({products: [], isStale: false}),
+    cacheProducts: jest.fn().mockResolvedValue(undefined),
+    getCachedCategories: jest.fn().mockResolvedValue([]),
+    cacheCategories: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/orderCacheRepository', () => ({
+  orderCacheRepository: {
+    cacheOrders: jest.fn().mockResolvedValue(undefined),
+    getCachedOrders: jest.fn().mockResolvedValue([]),
+    createPendingOrder: jest.fn(),
+    clearAll: jest.fn(),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/syncQueueRepository', () => ({
+  syncQueueRepository: {
+    enqueue: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 jest.mock('../services/productService');
 const mockedProductService = productService as jest.Mocked<typeof productService>;
+const mockedProductCacheRepository =
+  productCacheRepository as jest.Mocked<typeof productCacheRepository>;
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -65,6 +92,10 @@ function makeWrapper() {
 describe('useProducts hook', () => {
   beforeEach(() => {
     mockedProductService.getProducts.mockReset();
+    mockedProductCacheRepository.getCachedProducts.mockResolvedValue({
+      products: [],
+      isStale: false,
+    });
   });
 
   it('should start with empty products and loading=true', () => {
@@ -86,6 +117,7 @@ describe('useProducts hook', () => {
 
   it('should set error when service throws', async () => {
     mockedProductService.getProducts.mockRejectedValue(new Error('Network error'));
+    mockedProductCacheRepository.getCachedProducts.mockResolvedValue(null as unknown as {products: Product[]; isStale: boolean});
     const {result} = renderHook(() => useProducts(), {wrapper: makeWrapper()});
 
     await waitFor(() => expect(result.current.error).not.toBeNull());

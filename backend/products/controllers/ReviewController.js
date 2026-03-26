@@ -2,9 +2,7 @@ const ProductReviewModel = require("../../common/models/ProductReview");
 
 module.exports = {
   getReviews: (req, res) => {
-    const {
-      params: { productId },
-    } = req;
+    const productId = parseInt(req.params.productId, 10);
 
     ProductReviewModel.findAllReviews({ productId })
       .then((reviews) => {
@@ -22,11 +20,8 @@ module.exports = {
   },
 
   addReview: (req, res) => {
-    const {
-      params: { productId },
-      body: payload,
-      user: { userId },
-    } = req;
+    const productId = parseInt(req.params.productId, 10);
+    const { body: payload, user: { userId } } = req;
 
     ProductReviewModel.findReview({ userId, productId })
       .then((existing) => {

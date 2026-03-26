@@ -4,6 +4,12 @@ import {schema} from './schema';
 import {migrations} from './migrations';
 import {ProfileModel} from './models/ProfileModel';
 import {CartItemModel} from './models/CartItemModel';
+import {SearchHistoryModel} from './models/SearchHistoryModel';
+import {RecentlyViewedModel} from './models/RecentlyViewedModel';
+import {SyncOperationModel} from './models/SyncOperationModel';
+import {CachedProductModel} from './models/CachedProductModel';
+import {CachedCategoryModel} from './models/CachedCategoryModel';
+import {CachedOrderModel} from './models/CachedOrderModel';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -15,5 +21,14 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [ProfileModel, CartItemModel],
+  modelClasses: [
+    ProfileModel,
+    CartItemModel,
+    SearchHistoryModel,
+    RecentlyViewedModel,
+    SyncOperationModel,
+    CachedProductModel,
+    CachedCategoryModel,
+    CachedOrderModel,
+  ],
 });

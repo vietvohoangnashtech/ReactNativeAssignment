@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -15,7 +16,9 @@ import Feather from 'react-native-vector-icons/Feather';
 import {useAppDispatch, useAppSelector} from '../../../store/store';
 import {fetchProductById, fetchProductReviews, clearSelectedProduct} from '../store/productsSlice';
 import {addItem} from '../../cart/store/cartSlice';
+import {toggleWishlist, selectIsWishlisted} from '../../wishlist/store/wishlistSlice';
 import {productService} from '../services/productService';
+import {recentlyViewedRepository} from '../../../services/database/repositories/recentlyViewedRepository';
 import {colors} from '../../../theme';
 import type {RootStackParamList} from '../../../navigation/types';
 import type {CreateReviewPayload} from '../types/product.types';
@@ -36,6 +39,7 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
   const product = useAppSelector(state => state.products.selectedProduct);
   const reviews = useAppSelector(state => state.products.reviews);
   const reviewsLoading = useAppSelector(state => state.products.reviewsLoading);
+  const isWishlisted = useAppSelector(selectIsWishlisted(productId));
 
   const [added, setAdded] = useState(false);
   const [reviewText, setReviewText] = useState('');
@@ -49,6 +53,12 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
       dispatch(clearSelectedProduct());
     };
   }, [dispatch, productId]);
+
+  useEffect(() => {
+    if (product) {
+      recentlyViewedRepository.trackView(product).catch(() => {});
+    }
+  }, [product]);
 
   const handleAddToCart = useCallback(() => {
     if (!product) {return;}
@@ -88,8 +98,13 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
       await productService.addProductReview(productId, payload);
       setReviewText('');
       dispatch(fetchProductReviews(productId));
-    } catch {
-      // ignore
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        Alert.alert('Already Reviewed', 'You have already submitted a review for this product.');
+      } else {
+        Alert.alert('Error', 'Failed to submit review. Please try again.');
+      }
     } finally {
       setSubmittingReview(false);
     }
@@ -119,8 +134,10 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
         <Text style={styles.headerTitle} numberOfLines={1}>
           Product Details
         </Text>
-        <TouchableOpacity style={styles.headerIconBtn}>
-          <Feather name="heart" size={20} color={colors.textMuted} />
+        <TouchableOpacity
+          style={styles.headerIconBtn}
+          onPress={() => dispatch(toggleWishlist(productId))}>
+          <Feather name="heart" size={20} color={isWishlisted ? colors.error : colors.textMuted} />
         </TouchableOpacity>
       </View>
 
@@ -202,7 +219,7 @@ const ProductDetailScreen = ({route}: Props): React.JSX.Element => {
                       <Feather name="user" size={14} color={colors.primary} />
                     </View>
                     <Text style={styles.reviewAuthor}>
-                      {r.User?.username ?? 'User'}
+                      {r.User?.username ?? r.User?.firstName ?? 'Anonymous'}
                     </Text>
                   </View>
                   <View style={styles.reviewStarsRow}>

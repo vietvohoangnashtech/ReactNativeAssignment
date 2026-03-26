@@ -15,6 +15,8 @@ const UserRoutes = require("./users/routes");
 const ProductRoutes = require("./products/routes");
 const OrderRoutes = require("./orders/routes");
 const CategoryRoutes = require("./categories/routes");
+const WishlistRoutes = require("./wishlist/routes");
+const SyncRoutes = require("./sync/routes");
 
 // Sequelize model imports
 const UserModel = require("./common/models/User");
@@ -22,6 +24,8 @@ const ProductModel = require("./common/models/Product");
 const OrderModel = require("./common/models/Order");
 const ProductReviewModel = require("./common/models/ProductReview");
 const CategoryModel = require("./common/models/Category");
+const WishlistModel = require("./common/models/Wishlist");
+const CartModel = require("./common/models/Cart");
 
 app.use(morgan("tiny"));
 app.use(cors());
@@ -48,6 +52,11 @@ ProductModel.initialise(sequelize);
 OrderModel.initialise(sequelize);
 ProductReviewModel.initialise(sequelize);
 CategoryModel.initialise(sequelize);
+WishlistModel.initialise(sequelize);
+CartModel.initialise(sequelize);
+
+// Define associations
+ProductReviewModel.model.belongsTo(UserModel.model, { foreignKey: 'userId' });
 
 // Syncing the models that are defined on sequelize with the tables that alredy exists
 // in the database. It creates models as tables that do not exist in the DB.
@@ -62,6 +71,8 @@ sequelize
     app.use("/product", ProductRoutes);
     app.use("/order", OrderRoutes);
     app.use("/category", CategoryRoutes);
+    app.use("/wishlist", WishlistRoutes);
+    app.use("/", SyncRoutes);
 
     app.listen(PORT, () => {
       console.log("Server Listening on PORT:", port);

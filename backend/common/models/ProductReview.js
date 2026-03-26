@@ -49,6 +49,13 @@ module.exports = {
   findAllReviews: (query) => {
     return this.model.findAll({
       where: query,
+      include: [
+        {
+          association: 'user',
+          attributes: ['username', 'firstName', 'lastName'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
     });
   },
 };

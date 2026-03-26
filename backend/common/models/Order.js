@@ -32,6 +32,11 @@ const OrderModel = {
     allowNull: false,
     defaultValue: orderStatuses.PENDING,
   },
+  idempotencyKey: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+  },
 };
 
 module.exports = {

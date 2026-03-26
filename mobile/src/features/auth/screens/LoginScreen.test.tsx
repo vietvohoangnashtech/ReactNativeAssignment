@@ -21,6 +21,10 @@ jest.mock('jwt-decode', () => ({jwtDecode: jest.fn()}));
 jest.mock('react-native-vector-icons/Feather', () => 'Feather');
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'MatIcon');
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({navigate: jest.fn()}),
+}));
+
 jest.mock('../services/authService');
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 

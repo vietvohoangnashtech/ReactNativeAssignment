@@ -96,4 +96,35 @@ describe('authService', () => {
       await expect(authService.logout()).rejects.toThrow('Network');
     });
   });
+
+  describe('forgotPassword', () => {
+    it('should call POST /auth/forgot-password with email', async () => {
+      mockedApiClient.post.mockResolvedValueOnce({data: {}});
+      await authService.forgotPassword('test@example.com');
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/forgot-password', {
+        email: 'test@example.com',
+      });
+    });
+
+    it('should propagate errors', async () => {
+      mockedApiClient.post.mockRejectedValueOnce(new Error('Not Found'));
+      await expect(authService.forgotPassword('x@y.com')).rejects.toThrow('Not Found');
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should call POST /auth/reset-password with token and password', async () => {
+      mockedApiClient.post.mockResolvedValueOnce({data: {}});
+      await authService.resetPassword('reset-tok', 'newpass123');
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/auth/reset-password', {
+        resetToken: 'reset-tok',
+        newPassword: 'newpass123',
+      });
+    });
+
+    it('should propagate errors', async () => {
+      mockedApiClient.post.mockRejectedValueOnce(new Error('Expired'));
+      await expect(authService.resetPassword('tok', 'pass')).rejects.toThrow('Expired');
+    });
+  });
 });

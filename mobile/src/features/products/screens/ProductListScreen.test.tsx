@@ -5,6 +5,7 @@ import {configureStore} from '@reduxjs/toolkit';
 import {ProductListScreen} from './ProductListScreen';
 import {productService} from '../services/productService';
 import {categoryService} from '../services/categoryService';
+import {productCacheRepository} from '../../../services/database/repositories/productCacheRepository';
 import rootReducer from '../../../store/rootReducer';
 import type {Product} from '../types/product.types';
 import type {Category} from '../types/category.types';
@@ -25,6 +26,54 @@ jest.mock('../../../services/database/repositories/profileRepository', () => ({
   },
 }));
 
+jest.mock('../../../services/database/repositories/productCacheRepository', () => ({
+  productCacheRepository: {
+    getCachedProducts: jest.fn().mockResolvedValue({products: [], isStale: false}),
+    cacheProducts: jest.fn().mockResolvedValue(undefined),
+    getCachedCategories: jest.fn().mockResolvedValue([]),
+    cacheCategories: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/orderCacheRepository', () => ({
+  orderCacheRepository: {
+    cacheOrders: jest.fn().mockResolvedValue(undefined),
+    getCachedOrders: jest.fn().mockResolvedValue([]),
+    createPendingOrder: jest.fn(),
+    clearAll: jest.fn(),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/syncQueueRepository', () => ({
+  syncQueueRepository: {
+    enqueue: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/searchHistoryRepository', () => ({
+  searchHistoryRepository: {
+    saveQuery: jest.fn().mockResolvedValue(undefined),
+    getHistory: jest.fn().mockResolvedValue([]),
+    clearHistory: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/recentlyViewedRepository', () => ({
+  recentlyViewedRepository: {
+    getRecentlyViewed: jest.fn().mockResolvedValue([]),
+    trackView: jest.fn().mockResolvedValue(undefined),
+    clearHistory: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../wishlist/services/wishlistService', () => ({
+  wishlistService: {
+    getWishlist: jest.fn().mockResolvedValue([]),
+    toggleWishlist: jest.fn(),
+    removeFromWishlist: jest.fn(),
+  },
+}));
+
 jest.mock('react-native-vector-icons/Feather', () => 'Feather');
 
 const mockNavigate = jest.fn();
@@ -37,6 +86,8 @@ jest.mock('../services/categoryService');
 
 const mockProductService = productService as jest.Mocked<typeof productService>;
 const mockCategoryService = categoryService as jest.Mocked<typeof categoryService>;
+const mockProductCacheRepository =
+  productCacheRepository as jest.Mocked<typeof productCacheRepository>;
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -85,6 +136,10 @@ describe('ProductListScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNavigate.mockReset();
+    mockProductCacheRepository.getCachedProducts.mockResolvedValue({
+      products: [],
+      isStale: false,
+    });
     mockProductService.getProducts.mockResolvedValue([laptopProduct, keyboardProduct]);
     mockCategoryService.getCategories.mockResolvedValue(mockCategories);
   });
@@ -142,16 +197,22 @@ describe('ProductListScreen', () => {
 
   describe('error state', () => {
     it('should show an error message when getProducts rejects', async () => {
+      mockProductCacheRepository.getCachedProducts.mockResolvedValue(
+        null as unknown as {products: Product[]; isStale: boolean},
+      );
       mockProductService.getProducts.mockRejectedValue(
         new Error('Network failure'),
       );
       const {getByText} = renderProductList();
       await waitFor(() => {
-        expect(getByText('Network failure')).toBeTruthy();
+        expect(getByText('Failed to load products')).toBeTruthy();
       });
     });
 
     it('should show a Retry button when there is an error', async () => {
+      mockProductCacheRepository.getCachedProducts.mockResolvedValue(
+        null as unknown as {products: Product[]; isStale: boolean},
+      );
       mockProductService.getProducts.mockRejectedValue(new Error('Network failure'));
       const {getByText} = renderProductList();
       await waitFor(() => {
@@ -160,6 +221,9 @@ describe('ProductListScreen', () => {
     });
 
     it('should refetch products when Retry is pressed', async () => {
+      mockProductCacheRepository.getCachedProducts.mockResolvedValue(
+        null as unknown as {products: Product[]; isStale: boolean},
+      );
       mockProductService.getProducts
         .mockRejectedValueOnce(new Error('Network failure'))
         .mockResolvedValueOnce([laptopProduct]);

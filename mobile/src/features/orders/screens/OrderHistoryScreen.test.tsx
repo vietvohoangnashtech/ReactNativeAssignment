@@ -23,6 +23,30 @@ jest.mock('../../../services/database/repositories/profileRepository', () => ({
   },
 }));
 
+jest.mock('../../../services/database/repositories/orderCacheRepository', () => ({
+  orderCacheRepository: {
+    cacheOrders: jest.fn().mockResolvedValue(undefined),
+    getCachedOrders: jest.fn().mockResolvedValue([]),
+    createPendingOrder: jest.fn(),
+    clearAll: jest.fn(),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/productCacheRepository', () => ({
+  productCacheRepository: {
+    getCachedProducts: jest.fn().mockResolvedValue({products: [], isStale: false}),
+    cacheProducts: jest.fn().mockResolvedValue(undefined),
+    getCachedCategories: jest.fn().mockResolvedValue([]),
+    cacheCategories: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/syncQueueRepository', () => ({
+  syncQueueRepository: {
+    enqueue: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 jest.mock('../services/ordersService');
 const mockOrdersService = ordersService as jest.Mocked<typeof ordersService>;
 

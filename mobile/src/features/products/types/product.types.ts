@@ -15,7 +15,7 @@ export interface ProductReview {
   rating: number;
   message: string;
   createdAt?: string;
-  User?: {username: string};
+  User?: {username: string; firstName: string; lastName: string};
 }
 
 export interface CreateReviewPayload {

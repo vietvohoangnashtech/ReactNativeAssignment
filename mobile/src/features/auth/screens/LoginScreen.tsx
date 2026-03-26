@@ -1,7 +1,6 @@
 import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,12 +15,18 @@ import {TextInput} from '../../../components/ui/TextInput/TextInput';
 import {Button} from '../../../components/ui/Button/Button';
 import {useAuthContext} from '../../../contexts/AuthContext';
 import {authService} from '../services/authService';
+import {googleAuthService} from '../services/googleAuthService';
+import {facebookAuthService} from '../services/facebookAuthService';
 import {colors} from '../../../theme';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useNavigation} from '@react-navigation/native';
+import type {AuthStackParamList} from '../../../navigation/types';
 
 type Tab = 'login' | 'signup';
 
 const LoginScreen = (): React.JSX.Element => {
-  const {login} = useAuthContext();
+  const {login, loginWithBiometric, biometricAvailable, enableBiometric} = useAuthContext();
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [activeTab, setActiveTab] = useState<Tab>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +36,7 @@ const LoginScreen = (): React.JSX.Element => {
   const [age, setAge] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [rememberBiometric, setRememberBiometric] = useState(false);
 
   const switchTab = useCallback((tab: Tab) => {
     setActiveTab(tab);
@@ -64,6 +70,9 @@ const LoginScreen = (): React.JSX.Element => {
       if (activeTab === 'login') {
         const data = await authService.login({username: username.trim(), password});
         await login(data.token, data.user);
+        if (rememberBiometric) {
+          await enableBiometric();
+        }
       } else {
         const data = await authService.register({
           username: username.trim(),
@@ -82,11 +91,52 @@ const LoginScreen = (): React.JSX.Element => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, username, password, email, firstName, lastName, age, login]);
+  }, [activeTab, username, password, email, firstName, lastName, age, login, rememberBiometric, enableBiometric]);
 
-  const handleComingSoon = useCallback((feature: string) => {
-    Alert.alert('Coming Soon', `${feature} will be available in a future update.`);
-  }, []);
+  const handleBiometricLogin = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const success = await loginWithBiometric();
+      if (!success) {
+        setError('Biometric login failed. Token may have expired. Please sign in with password.');
+      }
+    } catch {
+      setError('Biometric authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  }, [loginWithBiometric]);
+
+  const handleGoogleLogin = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await googleAuthService.signIn();
+      const data = await googleAuthService.authenticateWithBackend(result);
+      await login(data.token, data.user);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Google sign in failed';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [login]);
+
+  const handleFacebookLogin = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await facebookAuthService.signIn();
+      const data = await facebookAuthService.authenticateWithBackend(result);
+      await login(data.token, data.user);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Facebook sign in failed';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [login]);
 
   return (
     <KeyboardAvoidingView
@@ -182,19 +232,24 @@ const LoginScreen = (): React.JSX.Element => {
             {activeTab === 'login' && (
               <TouchableOpacity
                 style={styles.forgotRow}
-                onPress={() => handleComingSoon('Password recovery')}>
+                onPress={() => navigation.navigate('ForgotPassword')}>
                 <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
             )}
 
             {/* Biometrics Checkbox — visual only */}
             {activeTab === 'login' && (
-              <View style={styles.checkboxRow}>
-                <View style={styles.checkbox} />
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setRememberBiometric(prev => !prev)}
+                activeOpacity={0.7}>
+                <View style={[styles.checkbox, rememberBiometric && styles.checkboxChecked]}>
+                  {rememberBiometric && <Feather name="check" size={12} color={colors.white} />}
+                </View>
                 <Text style={styles.checkboxLabel}>
                   Use biometrics for faster login
                 </Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -212,15 +267,15 @@ const LoginScreen = (): React.JSX.Element => {
               />
             )}
 
-            {/* Biometrics Button — TODO */}
-            {activeTab === 'login' && (
+            {/* Biometrics Button */}
+            {activeTab === 'login' && biometricAvailable && (
               <Button
                 label="Sign in with Biometrics"
                 variant="outline"
                 icon={
                   <MatIcon name="fingerprint" size={20} color={colors.primary} />
                 }
-                onPress={() => handleComingSoon('Biometric sign in')}
+                onPress={handleBiometricLogin}
               />
             )}
           </View>
@@ -239,12 +294,12 @@ const LoginScreen = (): React.JSX.Element => {
               <View style={styles.socialRow}>
                 <TouchableOpacity
                   style={styles.socialBtn}
-                  onPress={() => handleComingSoon('Google sign in')}>
+                  onPress={handleGoogleLogin}>
                   <Text style={styles.socialBtnText}>Google</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.socialBtn}
-                  onPress={() => handleComingSoon('Facebook sign in')}>
+                  onPress={handleFacebookLogin}>
                   <Text style={styles.socialBtnText}>Facebook</Text>
                 </TouchableOpacity>
               </View>
@@ -357,6 +412,12 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.inputBorder,
     backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   checkboxLabel: {
     fontSize: 14,

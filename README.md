@@ -6,15 +6,28 @@ A full-stack mobile shopping application with React Native frontend, Node.js bac
 
 ## 📋 Table of Contents
 
-- [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Backend Setup](#backend-setup)
-- [Mobile Setup](#mobile-setup)
-- [API Documentation](#api-documentation)
-- [Assignment Status](#assignment-status)
-- [Architecture](#architecture)
-- [Submission](#submission)
+- [React Native Shopping App](#react-native-shopping-app)
+  - [📋 Table of Contents](#-table-of-contents)
+  - [📁 Project Structure](#-project-structure)
+  - [🛠️ Tech Stack](#️-tech-stack)
+    - [Mobile (React Native)](#mobile-react-native)
+    - [Backend](#backend)
+  - [⚡ Quick Start](#-quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Run Everything (Terminal 1 - Backend)](#run-everything-terminal-1---backend)
+    - [Run App (Terminal 2 - Mobile)](#run-app-terminal-2---mobile)
+  - [🔧 Backend Setup](#-backend-setup)
+  - [📱 Mobile Setup](#-mobile-setup)
+  - [📖 API Documentation](#-api-documentation)
+  - [✅ Assignment Status](#-assignment-status)
+  - [🏗️ Architecture](#️-architecture)
+    - [Feature-First Structure](#feature-first-structure)
+    - [State Management](#state-management)
+    - [Networking](#networking)
+  - [🧪 Testing](#-testing)
+  - [🚀 Running the App](#-running-the-app)
+  - [📝 Submission](#-submission)
+  - [📚 References](#-references)
 
 ---
 
@@ -25,18 +38,19 @@ ReactNativeAssignment/
 ├── mobile/                      # React Native app (RN 0.84.1)
 │   ├── src/
 │   │   ├── features/           # Feature-first architecture
-│   │   │   ├── auth/           # Login, register, JWT management
-│   │   │   ├── products/       # Product list, detail, reviews
+│   │   │   ├── auth/           # Login, register, JWT, Social/Biometric auth
+│   │   │   ├── products/       # Product list, detail, reviews, search history
 │   │   │   ├── cart/           # Cart management, checkout
 │   │   │   ├── orders/         # Order history, filtering
-│   │   │   └── profile/        # User profile, editing, offline cache
-│   │   ├── components/         # Reusable UI components
-│   │   ├── contexts/           # React Context (Auth)
-│   │   ├── navigation/         # React Navigation setup
-│   │   ├── services/           # API client (Axios)
+│   │   │   ├── profile/        # User profile, editing, offline cache, sync queue
+│   │   │   └── wishlist/       # User wishlist tracking, sync to server
+│   │   ├── components/         # Reusable UI components (Sync UI indicators)
+│   │   ├── contexts/           # React Context (AuthContext)
+│   │   ├── navigation/         # React Navigation 7 setup
+│   │   ├── services/           # API client (Axios), Sync, Network, DB
 │   │   ├── store/              # Redux Toolkit setup
 │   │   └── types/              # TypeScript types
-│   ├── __tests__/              # Jest tests
+│   ├── __tests__/              # Jest tests (349 tests, ~87% coverage)
 │   └── package.json
 │
 ├── backend/                     # Node.js REST API
@@ -59,14 +73,15 @@ ReactNativeAssignment/
 
 ### Mobile (React Native)
 - **Framework:** React Native 0.84.1, React 19.2.3
-- **Navigation:** React Navigation (bottom tabs + stack)
+- **Navigation:** React Navigation 7 (bottom tabs + stack)
 - **State Management:** Redux Toolkit + Context API
 - **HTTP Client:** Axios with JWT interceptors
-- **Storage:** react-native-encrypted-storage (tokens), AsyncStorage (cache)
-- **Authentication:** JWT + EncryptedStorage
+- **Storage & Offline:** WatermelonDB (SQLite) for offline-first architecture, react-native-encrypted-storage (tokens)
+- **Network Status:** @react-native-community/netinfo
+- **Authentication:** JWT + EncryptedStorage + Social/Biometric integration
 - **Styling:** React Native StyleSheet
 - **Language:** TypeScript (strict mode)
-- **Testing:** Jest + React Test Renderer
+- **Testing:** Jest + React Test Renderer (349 tests passing, ~87% coverage)
 
 ### Backend
 - **Runtime:** Node.js with Express
@@ -143,17 +158,24 @@ npm run android
 ```
 
 **Features Implemented:**
-- ✅ User authentication (login/register with 6 fields)
+- ✅ User authentication (login/register/logout with 6 fields)
+- ✅ Social & Biometric auth integrations
 - ✅ JWT token storage (encrypted)
-- ✅ Product listing (2-column grid, search)
-- ✅ Product details with reviews
-- ✅ Cart management
-- ✅ Checkout flow
+- ✅ Product listing (2-column grid, search, filters)
+- ✅ Product details with reviews and rating system
+- ✅ Wishlist tracking (offline & online sync)
+- ✅ Search history persistence
+- ✅ Recently viewed products
+- ✅ Cart management (offline persistence)
+- ✅ Checkout flow with payment methods
 - ✅ Order history (with status filters)
-- ✅ User profile (editable, offline cache)
-- ✅ Bottom tab navigation
+- ✅ User profile (editable with offline queue caching)
+- ✅ Advanced Offline-First Architecture (WatermelonDB + Sync Queue)
+- ✅ Network status indicators and auto-sync
+- ✅ Bottom tab navigation (Discover, Wishlist, Cart, Orders, Profile)
+- ✅ Pull-to-refresh on lists
 - ✅ TypeScript strict mode
-- ✅ Interceptor-based auth
+- ✅ Interceptor-based auth with automatic retry
 
 ---
 
@@ -180,19 +202,24 @@ Token is automatically injected via interceptors in the mobile app.
 | 2 | Store token in Encrypted Storage | ✅ Complete | 2 |
 | 3 | Display Product List on Home Tab | ✅ Complete | 2 |
 | 4 | Build Profile screen from API | ✅ Complete | 2 |
-| 5 | Save profile to local database | ✅ Complete (AsyncStorage) | 2 |
+| 5 | Save profile to local database | ✅ Complete (WatermelonDB) | 2 |
 
 **Bonus Features:**
-- ✅ Product detail view with reviews
-- ✅ Add review functionality
+- ✅ Product detail view with reviews and ratings
+- ✅ Add/edit review functionality
 - ✅ Shopping cart with quantity management
-- ✅ Checkout with payment methods
-- ✅ Order history with status filtering
-- ✅ User profile editing
-- ✅ Offline mode detection
-- ✅ Pull-to-refresh on lists
-- ✅ Bottom tab navigation (Discover, Cart, Orders, Profile)
+- ✅ Checkout with multiple payment methods
+- ✅ Order history with detailed filtering
+- ✅ User profile editing with offline queue fallback
+- ✅ Advanced Offline-First Mode (WatermelonDB, NetInfo, Queued Sync)
+- ✅ Pull-to-refresh on lists with sync indicators
+- ✅ Wishlist feature with heart toggles and sync
+- ✅ Search history tracking (last 20 queries)
+- ✅ Recently viewed products carousel
+- ✅ Bottom tab navigation (Discover, Wishlist, Cart, Orders, Profile)
+- ✅ Comprehensive Test Suite (349 tests, ~87% coverage)
 - ✅ TypeScript strict mode throughout
+- ✅ Social & Biometric Auth Flows
 
 ---
 
@@ -217,8 +244,9 @@ features/
 
 ### State Management
 - **Redux Toolkit:** Server state (products, orders, cart)
-- **React Context:** Auth state (user, token, isLoggedIn)
-- **AsyncStorage:** Offline cache (profile, cart)
+- **React Context:** Auth state (user, token, isLoggedIn, biometric configs)
+- **WatermelonDB:** Local SQLite performance cache & robust offline-first persistence
+- **SyncQueue:** Background queueing engine with idempotency and exponential backoff
 - **EncryptedStorage:** Sensitive data (JWT tokens)
 
 ### Networking
@@ -235,9 +263,10 @@ Run Jest tests:
 ```bash
 cd mobile
 npm test
+npm run test:coverage
 ```
 
-Current coverage: `LoginScreen` component test with `AuthProvider` wrapper.
+Current coverage: **349 passing tests** across 47 test suites, achieving **~87% overall test coverage** (including Auth, Sync Service, Redux Thunks, and UI screens).
 
 ---
 
@@ -275,14 +304,18 @@ npm run android
 GitHub Repository: {link to your code}
 
 Features Implemented:
-- ✅ User authentication (login & register)
+- ✅ User authentication (login, register, social, biometric)
 - ✅ JWT token management with encrypted storage
-- ✅ Product listing with search
-- ✅ Product details and reviews
-- ✅ Shopping cart and checkout
+- ✅ Product listing, search history, and recently viewed
+- ✅ Product details and reviews with ratings
+- ✅ Shopping cart and checkout with payment methods
 - ✅ Order history with filtering
-- ✅ User profile (editable + offline cache)
+- ✅ User profile (editable + offline queue cache)
+- ✅ Wishlist tracking (offline & online sync)
+- ✅ Advanced Offline-first Sync Architecture with WatermelonDB
+- ✅ Network status detection and auto-sync
 - ✅ Bottom tab navigation
+- ✅ ~87% Test Coverage (349 tests)
 - ✅ TypeScript strict mode
 - [Add any custom features you built]
 ```
@@ -299,10 +332,11 @@ Features Implemented:
 - [Axios Docs](https://axios-http.com/)
 - [TypeScript Docs](https://www.typescriptlang.org/)
 - [react-native-encrypted-storage](https://github.com/emeraldsanto/react-native-encrypted-storage)
-- [AsyncStorage](https://react-native-async-storage.github.io/async-storage/)
+- [WatermelonDB](https://nozbe.github.io/WatermelonDB/)
+- [React Native NetInfo](https://github.com/react-native-netinfo/react-native-netinfo)
 
 ---
 
-**Last Updated:** March 20, 2026
+**Last Updated:** March 26, 2026
 
 ​

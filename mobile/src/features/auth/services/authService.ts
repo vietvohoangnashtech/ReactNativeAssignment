@@ -21,6 +21,14 @@ const authService = {
   logout: async (): Promise<void> => {
     await apiClient.post('/logout');
   },
+
+  forgotPassword: async (email: string): Promise<void> => {
+    await apiClient.post('/auth/forgot-password', {email});
+  },
+
+  resetPassword: async (resetToken: string, newPassword: string): Promise<void> => {
+    await apiClient.post('/auth/reset-password', {resetToken, newPassword});
+  },
 };
 
 export {authService};

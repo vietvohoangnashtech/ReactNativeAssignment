@@ -19,7 +19,7 @@ const UserModel = {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   age: {
     type: DataTypes.INTEGER,
@@ -37,7 +37,25 @@ const UserModel = {
   lastName: {
     type: DataTypes.STRING,
     allowNull: false
-  }
+  },
+  googleId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+  },
+  facebookId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+  },
+  resetToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  resetTokenExpiry: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 };
 
 module.exports = {
@@ -52,6 +70,13 @@ module.exports = {
   findUser: (query) => {
     return this.model.findOne({
       where: query,
+    });
+  },
+
+  findOrCreateUser: (query, defaults) => {
+    return this.model.findOrCreate({
+      where: query,
+      defaults,
     });
   },
 

@@ -39,23 +39,46 @@ module.exports = {
       });
     }
 
-    UserModel.updateUser({ id: userId }, payload)
-      .then(() => {
-        return UserModel.findUser({ id: userId });
-      })
-      .then((user) => {
-        const { password: _pw, ...safeUser } = user.toJSON();
-        return res.status(200).json({
-          status: true,
-          data: safeUser,
+    // LWW conflict resolution: if client sends updatedAt, compare with server
+    const { updatedAt: clientUpdatedAt, ...updateFields } = payload;
+
+    const doUpdate = () => {
+      return UserModel.updateUser({ id: userId }, updateFields)
+        .then(() => UserModel.findUser({ id: userId }))
+        .then((user) => {
+          const { password: _pw, ...safeUser } = user.toJSON();
+          return res.status(200).json({
+            status: true,
+            data: safeUser,
+          });
         });
-      })
-      .catch((err) => {
-        return res.status(500).json({
-          status: false,
-          error: err,
+    };
+
+    if (clientUpdatedAt) {
+      UserModel.findUser({ id: userId })
+        .then((user) => {
+          const serverUpdatedAt = user.updatedAt
+            ? new Date(user.updatedAt).getTime()
+            : 0;
+          if (clientUpdatedAt < serverUpdatedAt) {
+            // Server has newer data — return server version (LWW: server wins)
+            const { password: _pw, ...safeUser } = user.toJSON();
+            return res.status(409).json({
+              status: false,
+              error: { message: "Server has newer data" },
+              data: safeUser,
+            });
+          }
+          return doUpdate();
+        })
+        .catch((err) => {
+          return res.status(500).json({ status: false, error: err });
         });
+    } else {
+      doUpdate().catch((err) => {
+        return res.status(500).json({ status: false, error: err });
       });
+    }
   },
 
   deleteUser: (req, res) => {

@@ -11,11 +11,15 @@ import type {UserProfile} from '../types/profile.types';
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 jest.mock('../services/userService');
-// Provide explicit factory to prevent WatermelonDB native module from loading
 jest.mock('../../../services/database/repositories/profileRepository', () => ({
   profileRepository: {
     getProfile: jest.fn(),
     saveProfile: jest.fn(),
+  },
+}));
+jest.mock('../../../services/database/repositories/syncQueueRepository', () => ({
+  syncQueueRepository: {
+    enqueue: jest.fn(),
   },
 }));
 
@@ -147,22 +151,25 @@ describe('profileSlice reducer', () => {
       expect(state.error).toBeNull();
     });
 
-    it('should set error and clear saving on failure', async () => {
-      mockedUserService.updateProfile.mockRejectedValue(new Error('Update failed'));
+    it('should save locally and enqueue sync when API fails and cache exists', async () => {
+      mockedUserService.updateProfile.mockRejectedValue(new Error('Network'));
+      mockedProfileRepository.getProfile.mockResolvedValue(mockProfile);
       mockedProfileRepository.saveProfile.mockResolvedValue(undefined);
       const store = makeStore();
       await store.dispatch(updateProfile({firstName: 'Jane'}));
       const state = store.getState().profile;
       expect(state.saving).toBe(false);
-      expect(state.error).toBe('Update failed');
+      expect(state.data?.firstName).toBe('Jane');
     });
 
-    it('should use fallback error message when error is not an Error instance', async () => {
-      mockedUserService.updateProfile.mockRejectedValue('string error');
-      mockedProfileRepository.saveProfile.mockResolvedValue(undefined);
+    it('should set error when API fails and no cached profile', async () => {
+      mockedUserService.updateProfile.mockRejectedValue(new Error('Network'));
+      mockedProfileRepository.getProfile.mockResolvedValue(null);
       const store = makeStore();
       await store.dispatch(updateProfile({firstName: 'Jane'}));
-      expect(store.getState().profile.error).toBe('Failed to update profile');
+      const state = store.getState().profile;
+      expect(state.saving).toBe(false);
+      expect(state.error).toBe('Failed to update profile');
     });
   });
 });

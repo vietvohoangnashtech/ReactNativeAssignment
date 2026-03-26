@@ -5,19 +5,40 @@ const { roles, orderStatuses } = require("../../config");
 module.exports = {
   createOrder: (req, res) => {
     const {
-      body: { items, totalAmount, shippingAddress, paymentMethod },
+      body: { items, totalAmount, shippingAddress, paymentMethod, idempotencyKey },
       user: { userId },
     } = req;
 
-    OrderModel.createOrder({
-      userId,
-      items: JSON.stringify(items),
-      totalAmount,
-      shippingAddress,
-      paymentMethod,
-      status: orderStatuses.PENDING,
-    })
+    // Idempotency check: if key provided, check for existing order
+    const proceed = idempotencyKey
+      ? OrderModel.findOrder({ idempotencyKey }).then((existing) => {
+          if (existing) {
+            const orderJson = existing.toJSON();
+            res.status(200).json({
+              status: true,
+              data: { ...orderJson, items: JSON.parse(orderJson.items) },
+            });
+            return null; // signal already responded
+          }
+          return true;
+        })
+      : Promise.resolve(true);
+
+    proceed
+      .then((shouldCreate) => {
+        if (!shouldCreate) return null;
+        return OrderModel.createOrder({
+          userId,
+          items: JSON.stringify(items),
+          totalAmount,
+          shippingAddress,
+          paymentMethod,
+          status: orderStatuses.PENDING,
+          idempotencyKey: idempotencyKey || null,
+        });
+      })
       .then((order) => {
+        if (!order) return; // already responded via idempotency
         const orderJson = order.toJSON();
         return res.status(201).json({
           status: true,

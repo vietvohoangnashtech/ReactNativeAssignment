@@ -6,6 +6,7 @@ import {ProductListScreen} from '../features/products/screens/ProductListScreen'
 import {CartScreen} from '../features/cart/screens/CartScreen';
 import {OrderHistoryScreen} from '../features/orders/screens/OrderHistoryScreen';
 import {ProfileScreen} from '../features/profile/screens/ProfileScreen';
+import {WishlistScreen} from '../features/wishlist/screens/WishlistScreen';
 import {useAppSelector} from '../store/store';
 import {selectCartItemCount} from '../features/cart/store/cartSlice';
 import {colors} from '../theme';
@@ -15,6 +16,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 const TAB_ICONS: Record<string, string> = {
   Discover: 'search',
+  Wishlist: 'heart',
   Cart: 'shopping-cart',
   Orders: 'clipboard',
   Profile: 'user',
@@ -62,6 +64,7 @@ const TabNavigator = (): React.JSX.Element => (
       tabBarLabelStyle: {fontSize: 11, fontWeight: '600', marginBottom: 4},
     })}>
     <Tab.Screen name="Discover" component={ProductListScreen} />
+    <Tab.Screen name="Wishlist" component={WishlistScreen} />
     <Tab.Screen name="Cart" component={CartScreen} />
     <Tab.Screen name="Orders" component={OrderHistoryScreen} />
     <Tab.Screen name="Profile" component={ProfileScreen} />

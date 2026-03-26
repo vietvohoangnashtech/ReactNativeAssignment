@@ -37,6 +37,30 @@ jest.mock('../../../services/database/repositories/profileRepository', () => ({
   },
 }));
 
+jest.mock('../../../services/database/repositories/productCacheRepository', () => ({
+  productCacheRepository: {
+    getCachedProducts: jest.fn().mockResolvedValue({products: [], isStale: false}),
+    cacheProducts: jest.fn().mockResolvedValue(undefined),
+    getCachedCategories: jest.fn().mockResolvedValue([]),
+    cacheCategories: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/orderCacheRepository', () => ({
+  orderCacheRepository: {
+    cacheOrders: jest.fn().mockResolvedValue(undefined),
+    getCachedOrders: jest.fn().mockResolvedValue([]),
+    createPendingOrder: jest.fn(),
+    clearAll: jest.fn(),
+  },
+}));
+
+jest.mock('../../../services/database/repositories/syncQueueRepository', () => ({
+  syncQueueRepository: {
+    enqueue: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 jest.mock('react-native-vector-icons/Feather', () => 'Feather');
 
 jest.mock('../services/userService');
@@ -78,6 +102,11 @@ function renderProfileScreen() {
 describe('ProfileScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    const {profileRepository: mockRepo} = jest.requireMock(
+      '../../../services/database/repositories/profileRepository',
+    ) as {profileRepository: {getProfile: jest.Mock; saveProfile: jest.Mock}};
+    mockRepo.getProfile.mockResolvedValue(null);
+    mockRepo.saveProfile.mockResolvedValue(undefined);
     mockUserService.getProfile.mockResolvedValue(mockProfile);
     mockUserService.updateProfile.mockResolvedValue(mockProfile);
     mockAuthService.logout.mockResolvedValue(undefined);

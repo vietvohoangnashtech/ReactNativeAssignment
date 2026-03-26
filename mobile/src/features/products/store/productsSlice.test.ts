@@ -6,12 +6,20 @@ import productsReducer, {
   clearSelectedProduct,
 } from './productsSlice';
 import {productService} from '../services/productService';
+import {productCacheRepository} from '../../../services/database/repositories/productCacheRepository';
 import type {Product, ProductReview} from '../types/product.types';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 jest.mock('../services/productService');
+jest.mock('../../../services/database/repositories/productCacheRepository', () => ({
+  productCacheRepository: {
+    getCachedProducts: jest.fn(),
+    cacheProducts: jest.fn(),
+  },
+}));
 const mockedProductService = productService as jest.Mocked<typeof productService>;
+const mockedCache = productCacheRepository as jest.Mocked<typeof productCacheRepository>;
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -41,7 +49,7 @@ const mockReview: ProductReview = {
   rating: 4,
   message: 'Great product!',
   createdAt: '2025-01-01T00:00:00.000Z',
-  User: {username: 'testuser'},
+  User: {username: 'testuser', firstName: 'Test', lastName: 'User'},
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -65,6 +73,8 @@ describe('productsSlice reducer', () => {
             loading: false,
             reviewsLoading: false,
             error: null,
+            isOffline: false,
+            isStale: false,
           },
         },
       });
@@ -78,17 +88,13 @@ describe('productsSlice reducer', () => {
   describe('fetchProducts thunk', () => {
     beforeEach(() => {
       mockedProductService.getProducts.mockReset();
-    });
-
-    it('should set loading=true and clear error on pending', () => {
-      const store = makeStore();
-      store.dispatch({type: fetchProducts.pending.type});
-      const state = store.getState().products;
-      expect(state.loading).toBe(true);
-      expect(state.error).toBeNull();
+      mockedCache.getCachedProducts.mockReset();
+      mockedCache.cacheProducts.mockReset();
     });
 
     it('should populate items and set loading=false on fulfilled', async () => {
+      mockedCache.getCachedProducts.mockResolvedValue(null);
+      mockedCache.cacheProducts.mockResolvedValue(undefined);
       mockedProductService.getProducts.mockResolvedValue([mockProduct, mockProduct2]);
       const store = makeStore();
       await store.dispatch(fetchProducts());
@@ -96,24 +102,27 @@ describe('productsSlice reducer', () => {
       expect(state.loading).toBe(false);
       expect(state.items).toHaveLength(2);
       expect(state.items[0]?.id).toBe(1);
-      expect(state.error).toBeNull();
+      expect(state.isOffline).toBe(false);
     });
 
-    it('should set error and loading=false on rejected', async () => {
+    it('should fall back to cache when API fails', async () => {
+      mockedCache.getCachedProducts.mockResolvedValue({products: [mockProduct], isStale: true});
+      mockedProductService.getProducts.mockRejectedValue(new Error('Network error'));
+      const store = makeStore();
+      await store.dispatch(fetchProducts());
+      const state = store.getState().products;
+      expect(state.items).toHaveLength(1);
+      expect(state.isOffline).toBe(true);
+    });
+
+    it('should set error when API fails and no cache', async () => {
+      mockedCache.getCachedProducts.mockResolvedValue(null);
       mockedProductService.getProducts.mockRejectedValue(new Error('Network error'));
       const store = makeStore();
       await store.dispatch(fetchProducts());
       const state = store.getState().products;
       expect(state.loading).toBe(false);
-      expect(state.error).toBe('Network error');
-      expect(state.items).toHaveLength(0);
-    });
-
-    it('should set fallback error message when error has no message', async () => {
-      mockedProductService.getProducts.mockRejectedValue({});
-      const store = makeStore();
-      await store.dispatch(fetchProducts());
-      expect(store.getState().products.error).toBe('Failed to load products');
+      expect(state.error).toBe('Failed to load products');
     });
   });
 

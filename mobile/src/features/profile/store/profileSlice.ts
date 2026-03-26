@@ -1,5 +1,6 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {profileRepository} from '../../../services/database/repositories/profileRepository';
+import {syncQueueRepository} from '../../../services/database/repositories/syncQueueRepository';
 import {userService} from '../services/userService';
 import type {UserProfile, UpdateProfilePayload} from '../types/profile.types';
 
@@ -43,9 +44,21 @@ export const updateProfile = createAsyncThunk(
       const profile = await userService.updateProfile(payload);
       await profileRepository.saveProfile(profile);
       return profile;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update profile';
-      return rejectWithValue(message);
+    } catch {
+      // Offline: save locally + enqueue sync
+      const cached = await profileRepository.getProfile();
+      if (cached) {
+        const updated = {...cached, ...payload};
+        await profileRepository.saveProfile(updated);
+        await syncQueueRepository.enqueue({
+          entityType: 'profile',
+          entityId: String(cached.id),
+          operation: 'update',
+          payload: {...payload, updatedAt: Date.now()},
+        });
+        return updated;
+      }
+      return rejectWithValue('Failed to update profile');
     }
   },
 );

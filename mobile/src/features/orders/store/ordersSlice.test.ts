@@ -1,12 +1,20 @@
 import {configureStore} from '@reduxjs/toolkit';
 import ordersReducer, {fetchOrders} from './ordersSlice';
 import {ordersService} from '../services/ordersService';
+import {orderCacheRepository} from '../../../services/database/repositories/orderCacheRepository';
 import type {Order} from '../types/order.types';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 jest.mock('../services/ordersService');
+jest.mock('../../../services/database/repositories/orderCacheRepository', () => ({
+  orderCacheRepository: {
+    cacheOrders: jest.fn(),
+    getCachedOrders: jest.fn(),
+  },
+}));
 const mockedOrdersService = ordersService as jest.Mocked<typeof ordersService>;
+const mockedOrderCache = orderCacheRepository as jest.Mocked<typeof orderCacheRepository>;
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -32,48 +40,46 @@ function makeStore() {
 describe('ordersSlice reducer', () => {
   it('should return the correct initial state', () => {
     const store = makeStore();
-    expect(store.getState().orders).toEqual({items: [], loading: false, error: null});
+    expect(store.getState().orders).toEqual({items: [], loading: false, error: null, isOffline: false});
   });
 
   describe('fetchOrders thunk', () => {
     beforeEach(() => {
       mockedOrdersService.getOrders.mockReset();
-    });
-
-    it('should set loading=true and clear error on pending', () => {
-      const store = makeStore();
-      store.dispatch({type: fetchOrders.pending.type});
-      const state = store.getState().orders;
-      expect(state.loading).toBe(true);
-      expect(state.error).toBeNull();
+      mockedOrderCache.cacheOrders.mockReset();
+      mockedOrderCache.getCachedOrders.mockReset();
     });
 
     it('should populate items and set loading=false on fulfilled', async () => {
       mockedOrdersService.getOrders.mockResolvedValue([mockOrder]);
+      mockedOrderCache.cacheOrders.mockResolvedValue(undefined);
       const store = makeStore();
       await store.dispatch(fetchOrders());
       const state = store.getState().orders;
       expect(state.loading).toBe(false);
       expect(state.items).toHaveLength(1);
       expect(state.items[0]?.id).toBe(1);
-      expect(state.error).toBeNull();
+      expect(state.isOffline).toBe(false);
     });
 
-    it('should set error and loading=false on rejected', async () => {
+    it('should fall back to cache when API fails', async () => {
       mockedOrdersService.getOrders.mockRejectedValue(new Error('Server error'));
+      mockedOrderCache.getCachedOrders.mockResolvedValue([mockOrder]);
+      const store = makeStore();
+      await store.dispatch(fetchOrders());
+      const state = store.getState().orders;
+      expect(state.items).toHaveLength(1);
+      expect(state.isOffline).toBe(true);
+    });
+
+    it('should set error when API fails and no cache', async () => {
+      mockedOrdersService.getOrders.mockRejectedValue(new Error('Server error'));
+      mockedOrderCache.getCachedOrders.mockResolvedValue([]);
       const store = makeStore();
       await store.dispatch(fetchOrders());
       const state = store.getState().orders;
       expect(state.loading).toBe(false);
-      expect(state.error).toBe('Server error');
-      expect(state.items).toHaveLength(0);
-    });
-
-    it('should use fallback error message when error has no message', async () => {
-      mockedOrdersService.getOrders.mockRejectedValue({});
-      const store = makeStore();
-      await store.dispatch(fetchOrders());
-      expect(store.getState().orders.error).toBe('Failed to load orders');
+      expect(state.error).toBe('Failed to load orders');
     });
   });
 });

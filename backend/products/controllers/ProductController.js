@@ -1,8 +1,27 @@
 const ProductModel = require("../../common/models/Product");
+const { Op } = require("sequelize");
 
 module.exports = {
   getAllProducts: (req, res) => {
-    const { query: filters } = req;
+    const { since, ...filters } = req.query;
+
+    if (since) {
+      // Delta fetch: return products updated after `since` timestamp
+      const sinceDate = new Date(parseInt(since, 10));
+      const query = { ...filters, updatedAt: { [Op.gt]: sinceDate } };
+      ProductModel.findAllProducts(query)
+        .then((products) => {
+          return res.status(200).json({
+            status: true,
+            data: products,
+            meta: { since: parseInt(since, 10), fetchedAt: Date.now() },
+          });
+        })
+        .catch((err) => {
+          return res.status(500).json({ status: false, error: err });
+        });
+      return;
+    }
 
     ProductModel.findAllProducts(filters)
       .then((products) => {
