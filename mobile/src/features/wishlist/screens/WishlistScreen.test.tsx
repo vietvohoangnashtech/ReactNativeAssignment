@@ -59,7 +59,7 @@ function makeStore(preloadedState?: any) {
       products: productsReducer,
     },
     preloadedState,
-  });
+  } as any);
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

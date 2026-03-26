@@ -64,7 +64,7 @@ const mockReviews: ProductReview[] = [
     rating: 5,
     message: 'Absolutely amazing sound quality!',
     createdAt: '2024-01-10T10:00:00.000Z',
-    User: {username: 'alice'},
+    User: {username: 'alice', firstName: 'Alice', lastName: 'Smith'},
   },
   {
     id: 2,
@@ -73,7 +73,7 @@ const mockReviews: ProductReview[] = [
     rating: 4,
     message: 'Great value for the price.',
     createdAt: '2024-01-12T12:00:00.000Z',
-    User: {username: 'bob'},
+    User: {username: 'bob', firstName: 'Bob', lastName: 'Jones'},
   },
 ];
 

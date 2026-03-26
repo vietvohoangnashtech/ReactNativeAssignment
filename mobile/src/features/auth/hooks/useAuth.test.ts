@@ -6,7 +6,7 @@ import type {User} from '../types/auth.types';
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 jest.mock('../../../contexts/AuthContext', () => ({
-  useAuthContext: jest.fn(),
+  useAuthContext: jest.fn<ReturnType<typeof useAuthContext>, []>(),
 }));
 const mockedUseAuthContext = useAuthContext as jest.Mock;
 

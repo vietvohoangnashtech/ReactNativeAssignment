@@ -13,9 +13,9 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 jest.mock('react-native-encrypted-storage', () => ({
-  setItem: jest.fn(),
-  getItem: jest.fn(() => Promise.resolve(null)),
-  removeItem: jest.fn(),
+  setItem: jest.fn<Promise<void>, [string, string]>(),
+  getItem: jest.fn<Promise<string | null>, [string]>(() => Promise.resolve(null)),
+  removeItem: jest.fn<Promise<void>, [string]>(),
 }));
 
 jest.mock('react-native-screens', () => ({

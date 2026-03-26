@@ -53,13 +53,13 @@ function makeWrapper() {
 describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedEncryptedStorage.setItem.mockResolvedValue(undefined);
-    mockedEncryptedStorage.removeItem.mockResolvedValue(undefined);
+    (mockedEncryptedStorage.setItem as jest.Mock).mockResolvedValue(undefined);
+    (mockedEncryptedStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('initial load', () => {
     it('should start with loading=true then resolve to logged-out when no token stored', async () => {
-      mockedEncryptedStorage.getItem.mockResolvedValue(null);
+      (mockedEncryptedStorage.getItem as jest.Mock).mockResolvedValue(null);
       const {result} = renderHook(() => useAuthContext(), {wrapper: makeWrapper()});
 
       expect(result.current.loading).toBe(true);
@@ -71,7 +71,7 @@ describe('AuthContext', () => {
     });
 
     it('should restore session when a valid non-expired token is stored', async () => {
-      mockedEncryptedStorage.getItem
+      (mockedEncryptedStorage.getItem as jest.Mock)
         .mockResolvedValueOnce(VALID_TOKEN) // auth_token
         .mockResolvedValueOnce(JSON.stringify(mockUser)); // auth_user
       mockedJwtDecode.mockReturnValue({exp: FUTURE_EXP});
@@ -86,7 +86,7 @@ describe('AuthContext', () => {
     });
 
     it('should remove expired token and stay logged out', async () => {
-      mockedEncryptedStorage.getItem.mockResolvedValueOnce(VALID_TOKEN);
+      (mockedEncryptedStorage.getItem as jest.Mock).mockResolvedValueOnce(VALID_TOKEN);
       mockedJwtDecode.mockReturnValue({exp: PAST_EXP});
 
       const {result} = renderHook(() => useAuthContext(), {wrapper: makeWrapper()});
@@ -99,7 +99,7 @@ describe('AuthContext', () => {
     });
 
     it('should treat token with no exp as expired', async () => {
-      mockedEncryptedStorage.getItem.mockResolvedValueOnce(VALID_TOKEN);
+      (mockedEncryptedStorage.getItem as jest.Mock).mockResolvedValueOnce(VALID_TOKEN);
       mockedJwtDecode.mockReturnValue({}); // no exp field
 
       const {result} = renderHook(() => useAuthContext(), {wrapper: makeWrapper()});
@@ -110,7 +110,7 @@ describe('AuthContext', () => {
     });
 
     it('should stay logged out when storage read throws', async () => {
-      mockedEncryptedStorage.getItem.mockRejectedValue(new Error('Storage error'));
+      (mockedEncryptedStorage.getItem as jest.Mock).mockRejectedValue(new Error('Storage error'));
 
       const {result} = renderHook(() => useAuthContext(), {wrapper: makeWrapper()});
 
@@ -122,7 +122,7 @@ describe('AuthContext', () => {
 
   describe('login', () => {
     it('should persist token + user and set isLoggedIn=true', async () => {
-      mockedEncryptedStorage.getItem.mockResolvedValue(null);
+      (mockedEncryptedStorage.getItem as jest.Mock).mockResolvedValue(null);
       const {result} = renderHook(() => useAuthContext(), {wrapper: makeWrapper()});
 
       await waitFor(() => expect(result.current.loading).toBe(false));
@@ -145,7 +145,7 @@ describe('AuthContext', () => {
   describe('logout', () => {
     it('should clear storage and set isLoggedIn=false', async () => {
       // Start with valid session
-      mockedEncryptedStorage.getItem
+      (mockedEncryptedStorage.getItem as jest.Mock)
         .mockResolvedValueOnce(VALID_TOKEN)
         .mockResolvedValueOnce(JSON.stringify(mockUser));
       mockedJwtDecode.mockReturnValue({exp: FUTURE_EXP});
@@ -167,7 +167,7 @@ describe('AuthContext', () => {
 
   describe('updateUser', () => {
     it('should update the user in state and persist to storage', async () => {
-      mockedEncryptedStorage.getItem
+      (mockedEncryptedStorage.getItem as jest.Mock)
         .mockResolvedValueOnce(VALID_TOKEN)
         .mockResolvedValueOnce(JSON.stringify(mockUser));
       mockedJwtDecode.mockReturnValue({exp: FUTURE_EXP});

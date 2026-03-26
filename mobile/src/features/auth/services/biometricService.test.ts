@@ -20,20 +20,20 @@ describe('biometricService', () => {
 
   describe('isBiometricEnabled', () => {
     it('should return true when enabled', async () => {
-      mockedStorage.getItem.mockResolvedValue('true');
+      (mockedStorage.getItem as jest.Mock).mockResolvedValue('true');
       const result = await biometricService.isBiometricEnabled();
       expect(result).toBe(true);
       expect(mockedStorage.getItem).toHaveBeenCalledWith('biometric_enabled');
     });
 
     it('should return false when not enabled', async () => {
-      mockedStorage.getItem.mockResolvedValue(null);
+      (mockedStorage.getItem as jest.Mock).mockResolvedValue(null);
       const result = await biometricService.isBiometricEnabled();
       expect(result).toBe(false);
     });
 
     it('should return false for non-true values', async () => {
-      mockedStorage.getItem.mockResolvedValue('false');
+      (mockedStorage.getItem as jest.Mock).mockResolvedValue('false');
       const result = await biometricService.isBiometricEnabled();
       expect(result).toBe(false);
     });
@@ -41,7 +41,7 @@ describe('biometricService', () => {
 
   describe('enableBiometric', () => {
     it('should store enabled flag, token, and user json', async () => {
-      mockedStorage.setItem.mockResolvedValue(undefined);
+      (mockedStorage.setItem as jest.Mock).mockResolvedValue(undefined);
       await biometricService.enableBiometric('token123', '{"id":1}');
       expect(mockedStorage.setItem).toHaveBeenCalledWith('biometric_enabled', 'true');
       expect(mockedStorage.setItem).toHaveBeenCalledWith('biometric_token', 'token123');
@@ -51,7 +51,7 @@ describe('biometricService', () => {
 
   describe('disableBiometric', () => {
     it('should remove all biometric storage keys', async () => {
-      mockedStorage.removeItem.mockResolvedValue(undefined);
+      (mockedStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
       await biometricService.disableBiometric();
       expect(mockedStorage.removeItem).toHaveBeenCalledWith('biometric_enabled');
       expect(mockedStorage.removeItem).toHaveBeenCalledWith('biometric_token');
@@ -61,13 +61,13 @@ describe('biometricService', () => {
 
   describe('getStoredCredentials', () => {
     it('should return null when biometric is not enabled', async () => {
-      mockedStorage.getItem.mockResolvedValue(null);
+      (mockedStorage.getItem as jest.Mock).mockResolvedValue(null);
       const result = await biometricService.getStoredCredentials();
       expect(result).toBeNull();
     });
 
     it('should return null when enabled but token is missing', async () => {
-      mockedStorage.getItem
+      (mockedStorage.getItem as jest.Mock)
         .mockResolvedValueOnce('true') // biometric_enabled
         .mockResolvedValueOnce(null)   // biometric_token
         .mockResolvedValueOnce('{"id":1}'); // biometric_user
@@ -76,7 +76,7 @@ describe('biometricService', () => {
     });
 
     it('should return null when enabled but userJson is missing', async () => {
-      mockedStorage.getItem
+      (mockedStorage.getItem as jest.Mock)
         .mockResolvedValueOnce('true')    // biometric_enabled
         .mockResolvedValueOnce('token123') // biometric_token
         .mockResolvedValueOnce(null);      // biometric_user
@@ -85,7 +85,7 @@ describe('biometricService', () => {
     });
 
     it('should return credentials when all values exist', async () => {
-      mockedStorage.getItem
+      (mockedStorage.getItem as jest.Mock)
         .mockResolvedValueOnce('true')
         .mockResolvedValueOnce('token123')
         .mockResolvedValueOnce('{"id":1}');

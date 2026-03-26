@@ -25,7 +25,7 @@ const mockReview: ProductReview = {
   userId: 3,
   rating: 5,
   message: 'Excellent!',
-  User: {username: 'alice'},
+  User: {username: 'alice', firstName: 'Alice', lastName: 'Smith'},
 };
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
